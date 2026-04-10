@@ -346,14 +346,17 @@ body {
   100% { transform: scale(1); }
 }
 .copy-item-label {
-  font-size: 9px;
+  font-size: 8px;
   color: var(--text-hint);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 3px;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .copy-item-val {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   color: var(--text);
@@ -694,6 +697,12 @@ function parseCSV(text, filename) {
   if (fromStr) document.getElementById('fromDate').value = fromStr;
   if (toStr)   document.getElementById('toDate').value   = toStr;
 
+  // Pay Dateを自動計算（期間のToから7日か22日を決定、祝日・土日は前倒し）
+  if (toStr) {
+    var autoPayDate = calcPayDate(toStr);
+    document.getElementById('payDate').value = autoPayDate;
+  }
+
   // Show success
   document.getElementById('uploadZone').style.display = 'none';
   var succ = document.getElementById('uploadSuccess');
@@ -708,6 +717,55 @@ function parseCSV(text, filename) {
 function isoDate(mmddyyyy) {
   var p = mmddyyyy.split('/');
   return p[2] + '-' + p[0] + '-' + p[1];
+}
+
+// ── PAY DATE 自動計算 ──
+// 給与サイクル: 1〜15日 → Pay Date = 22日、16〜末日 → Pay Date = 翌月7日
+// 祝日・土日の場合は前倒し（前の平日）
+var HI_HOLIDAYS = [
+  '2026-01-01','2026-01-19','2026-02-16','2026-03-26','2026-04-03',
+  '2026-05-25','2026-06-11','2026-07-03','2026-08-21','2026-09-07',
+  '2026-11-03','2026-11-11','2026-11-26','2026-12-25',
+  '2027-01-01','2027-01-18','2027-02-15','2027-03-26','2027-05-31',
+  '2027-06-11','2027-07-05','2027-08-20','2027-09-06',
+  '2027-11-11','2027-11-25','2027-12-27'
+];
+
+function isHIHoliday(dateStr) { return HI_HOLIDAYS.indexOf(dateStr) >= 0; }
+
+function prevBusinessDay(dt) {
+  // 土日祝は前倒し
+  var d = new Date(dt.getTime());
+  while (true) {
+    var dow = d.getDay();
+    var str = d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+    if (dow !== 0 && dow !== 6 && !isHIHoliday(str)) break;
+    d.setDate(d.getDate() - 1);
+  }
+  return d;
+}
+
+function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+function calcPayDate(toStr) {
+  // toStrはYYYY-MM-DD
+  var parts = toStr.split('-');
+  var toDay = parseInt(parts[2]);
+  var toMonth = parseInt(parts[1]);
+  var toYear = parseInt(parts[0]);
+
+  var payDt;
+  if (toDay <= 15) {
+    // 1〜15日の期間 → Pay Date = 同月22日
+    payDt = new Date(toYear, toMonth - 1, 22);
+  } else {
+    // 16〜末日の期間 → Pay Date = 翌月7日
+    payDt = new Date(toYear, toMonth, 7); // toMonthは0-indexedなので+1が翌月
+  }
+
+  // 祝日・土日なら前倒し
+  var bizDt = prevBusinessDay(payDt);
+  return bizDt.getFullYear() + '-' + pad2(bizDt.getMonth()+1) + '-' + pad2(bizDt.getDate());
 }
 
 function parseCSVRow(line) {
@@ -942,7 +1000,7 @@ function updateProgress() {
 // ── SAVE HISTORY ──
 // ── GOOGLE SHEETS CONFIG ──
 // ★ Apps Script Web App URL をここに貼り付ける（セットアップ後）
-var GAS_URL = '';  // 例: 'https://script.google.com/macros/s/XXXXX/exec'
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbzJdyVO0JqFxMOLNRR8fCV3Og-aYOAbb1jt1ZHvgg4TDm7obZ1yNUX87EalWofxS8P4/exec';
 
 // GAS_URLが未設定か確認
 function gasReady() { return GAS_URL && GAS_URL.length > 10; }
