@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Steak Teppei — Version History</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --bg:#0f1117;--surface:#171b24;--surface2:#1e2330;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#e8eaf0;--text-sub:#8892a4;--text-hint:#4a5568;
+  --orange:#f97316;--orange-dim:rgba(249,115,22,0.12);
+  --green:#22c55e;--green-dim:rgba(34,197,94,0.1);
+  --blue:#3b82f6;--blue-dim:rgba(59,130,246,0.1);
+  --yellow:#eab308;--yellow-dim:rgba(234,179,8,0.1);
+  --purple:#a855f7;--purple-dim:rgba(168,85,247,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);min-height:100vh;}
+
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:48px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.back-btn{background:none;border:none;color:var(--text-hint);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;transition:color .15s;}
+.back-btn:hover{color:var(--orange);}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);}
+.topbar-sub{font-size:11px;color:var(--text-hint);margin-left:auto;font-family:'JetBrains Mono',monospace;}
+
+.content{max-width:640px;margin:0 auto;padding:20px 16px 48px;}
+
+/* ── FILE FILTER ── */
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.filter-btn{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--surface);font-size:11px;font-weight:600;color:var(--text-hint);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.filter-btn:hover{border-color:var(--orange);color:var(--orange);}
+.filter-btn.active{background:var(--orange-dim);border-color:var(--orange);color:var(--orange);}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:24px;}
+.timeline::before{content:'';position:absolute;left:7px;top:8px;bottom:0;width:1px;background:var(--border2);}
+
+.tl-entry{position:relative;margin-bottom:20px;}
+.tl-dot{position:absolute;left:-20px;top:10px;width:10px;height:10px;border-radius:50%;border:2px solid var(--bg);flex-shrink:0;}
+
+.tl-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:border-color .15s;}
+.tl-card:hover{border-color:var(--border2);}
+
+.tl-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.tl-file-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
+.tl-ver{font-size:12px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;}
+.tl-datetime{font-size:10px;color:var(--text-hint);font-family:'JetBrains Mono',monospace;margin-left:auto;}
+
+.tl-items{list-style:none;padding:0;margin:0;}
+.tl-items li{font-size:12px;color:var(--text-sub);padding:3px 0;line-height:1.5;display:flex;gap:6px;}
+.tl-items li::before{content:"›";color:var(--text-hint);flex-shrink:0;}
+
+/* ── FILE COLORS ── */
+.badge-home   {background:var(--orange-dim);color:var(--orange);}
+.badge-payroll{background:var(--blue-dim);color:var(--blue);}
+.badge-sw     {background:var(--green-dim);color:var(--green);}
+.badge-version{background:var(--purple-dim);color:var(--purple);}
+.badge-gas    {background:var(--yellow-dim);color:var(--yellow);}
+
+.dot-home   {background:var(--orange);}
+.dot-payroll{background:var(--blue);}
+.dot-sw     {background:var(--green);}
+.dot-version{background:var(--purple);}
+.dot-gas    {background:var(--yellow);}
+
+.empty{text-align:center;padding:40px;color:var(--text-hint);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back-btn" onclick="history.back()">‹</button>
+  <div class="topbar-title">Version History</div>
+  <div class="topbar-sub" id="entryCount"></div>
+</div>
+
+<div class="content">
+  <div class="filter-row" id="filterRow"></div>
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// ★ 更新のたびにここに追記する（新しいものを上に追加）
+// ════════════════════════════════════════════════════════
+var HISTORY = [
+  {
+    file: 'payroll.html',
+    type: 'payroll',
+    version: '1.2',
+    datetime: '2026-04-10 12:30:00',
+    changes: [
+      'Pay Date auto-calculation added (7th / 22nd, Hawaii holidays considered)',
+      'Copy item label and value font sizes reduced to prevent overflow'
+    ]
+  },
+  {
+    file: 'home.html',
+    type: 'home',
+    version: '1.1',
+    datetime: '2026-04-10 12:20:00',
+    changes: [
+      'Latest Update banner added (version + datetime prominently displayed)',
+      'Inventory app link added to Operations section',
+      'What\'s New button added to topbar'
+    ]
+  },
+  {
+    file: 'sw-home.js',
+    type: 'sw',
+    version: '1.1',
+    datetime: '2026-04-10 12:20:00',
+    changes: [
+      'Cache version updated to st-home-v1.1'
+    ]
+  },
+  {
+    file: 'version.html',
+    type: 'version',
+    version: '1.0',
+    datetime: '2026-04-10 12:15:00',
+    changes: [
+      'Version history page created',
+      'Timeline view with file filter',
+      'All past updates documented'
+    ]
+  },
+  {
+    file: 'home.html',
+    type: 'home',
+    version: '1.0',
+    datetime: '2026-04-10 12:00:00',
+    changes: [
+      'Steak Teppei Tools home screen launched',
+      'Password-protected access with 30-day session',
+      'Links: Order App / Sales Data / Inventory / Payroll',
+      'Changelog / What\'s New modal',
+      'Service Worker auto-update support'
+    ]
+  },
+  {
+    file: 'sw-home.js',
+    type: 'sw',
+    version: '1.0',
+    datetime: '2026-04-10 12:00:00',
+    changes: [
+      'Service Worker for home.html created',
+      'Network-first strategy with cache fallback',
+      'Force update via SKIP_WAITING'
+    ]
+  },
+  {
+    file: 'payroll.html',
+    type: 'payroll',
+    version: '1.1',
+    datetime: '2026-04-10 11:30:00',
+    changes: [
+      'Google Sheets save via Apps Script integrated',
+      'History loaded from Sheets on startup',
+      'Delete record syncs to Sheets'
+    ]
+  },
+  {
+    file: 'gas_payroll.js',
+    type: 'gas',
+    version: '1.0',
+    datetime: '2026-04-10 11:00:00',
+    changes: [
+      'Google Apps Script for payroll history storage',
+      'doGet: list records, doPost: save/delete',
+      'Payroll History + Payroll Detail sheets auto-created',
+      'Currency and column formatting applied'
+    ]
+  },
+  {
+    file: 'payroll.html',
+    type: 'payroll',
+    version: '1.0',
+    datetime: '2026-04-10 10:00:00',
+    changes: [
+      'Payroll app initial release',
+      'Homebase CSV upload and parsing',
+      'Tip distribution calculation (Kacee fixed 100h)',
+      'Copy to QuickBooks: Regular Hrs / OT Hrs / Paycheck Tips',
+      'Copy progress tracker with green highlight',
+      'Excel (CSV) download for Two Miles'
+    ]
+  }
+];
+
+// ── RENDER ──
+var activeFilter = 'all';
+
+function getFileLabel(type) {
+  var map = { home:'home.html', payroll:'payroll.html', sw:'sw-home.js', version:'version.html', gas:'gas_payroll.js' };
+  return map[type] || type;
+}
+
+function renderFilters() {
+  var types = ['all'];
+  HISTORY.forEach(function(h) { if (types.indexOf(h.type) < 0) types.push(h.type); });
+  var html = '';
+  types.forEach(function(t) {
+    var label = t === 'all' ? 'All' : getFileLabel(t);
+    html += '<button class="filter-btn' + (t === activeFilter ? ' active' : '') + '" onclick="setFilter(\'' + t + '\')">' + label + '</button>';
+  });
+  document.getElementById('filterRow').innerHTML = html;
+}
+
+function setFilter(type) {
+  activeFilter = type;
+  renderFilters();
+  renderTimeline();
+}
+
+function renderTimeline() {
+  var filtered = activeFilter === 'all' ? HISTORY : HISTORY.filter(function(h) { return h.type === activeFilter; });
+  document.getElementById('entryCount').textContent = filtered.length + ' entries';
+
+  if (!filtered.length) {
+    document.getElementById('timeline').innerHTML = '<div class="empty">No entries</div>';
+    return;
+  }
+
+  var html = '';
+  filtered.forEach(function(h) {
+    var itemsHtml = h.changes.map(function(c) {
+      return '<li>' + c + '</li>';
+    }).join('');
+    html += '<div class="tl-entry">'
+      + '<div class="tl-dot dot-' + h.type + '"></div>'
+      + '<div class="tl-card">'
+      + '<div class="tl-header">'
+      + '<span class="tl-file-badge badge-' + h.type + '">' + h.file + '</span>'
+      + '<span class="tl-ver">v' + h.version + '</span>'
+      + '<span class="tl-datetime">' + h.datetime + '</span>'
+      + '</div>'
+      + '<ul class="tl-items">' + itemsHtml + '</ul>'
+      + '</div>'
+      + '</div>';
+  });
+  document.getElementById('timeline').innerHTML = html;
+}
+
+renderFilters();
+renderTimeline();
+</script>
+</body>
+</html>

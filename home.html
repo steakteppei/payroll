@@ -184,7 +184,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note" id="versionNote" onclick="openChangelog()">v1.0 · April 10, 2026</div>
+    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v1.2 · April 10, 2026 — View full version history ›</div>
   </div>
 </div>
 
@@ -202,10 +202,18 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION  = '1.1';
+var APP_VERSION  = '1.2';
 var APP_DATE     = 'April 10, 2026';
-var APP_DATETIME = '2026-04-10 12:00:00'; // ★ 更新のたびに秒まで記録（YYYY-MM-DD HH:MM:SS）
+var APP_DATETIME = '2026-04-10 12:35:00';
 var CHANGELOG = [
+  {
+    version: '1.2',
+    date: 'April 10, 2026',
+    items: [
+      'Version history page added (version.html)',
+      'Footer link to full version history'
+    ]
+  },
   {
     version: '1.1',
     date: 'April 10, 2026',
