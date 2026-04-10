@@ -229,16 +229,19 @@ body {
 /* Calc button */
 .calc-btn {
   width: 100%;
-  padding: 8px;
+  padding: 7px 4px;
   background: var(--orange);
   color: #fff;
   border: none;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s;
   font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .calc-btn:hover { opacity: 0.9; }
 .calc-btn:disabled { background: var(--surface2); color: var(--text-hint); cursor: not-allowed; }
@@ -704,8 +707,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '1.6';
-var PAYROLL_DATETIME = '2026-04-10 13:24:26'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '1.7';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -1198,24 +1201,29 @@ function saveRecord() {
 
   var rec = buildRecord();
 
-  fetch(GAS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ action: 'save', record: rec })
-  }).then(function() {
-    // no-corsではレスポンス本文が読めないので成功扱い
-    saveLocalFallback(rec); // ローカルにもキャッシュ
-    btn.disabled = false;
-    btn.textContent = '✓ Saved to Sheets!';
-    setTimeout(function() { btn.textContent = '💾 Save Payroll Record'; btn.disabled = false; }, 2500);
-    renderHistory();
-  }).catch(function(err) {
-    btn.disabled = false;
-    btn.textContent = '⚠ Save failed';
-    setTimeout(function() { btn.textContent = '💾 Save Payroll Record'; }, 2500);
-    alert('Save failed: ' + err.message);
-  });
+  // GETリクエストでGASに送信（CORS問題を回避）
+  var encoded = encodeURIComponent(JSON.stringify(rec));
+  fetch(GAS_URL + '?action=save&data=' + encoded)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        saveLocalFallback(rec);
+        btn.disabled = false;
+        btn.textContent = '✓ Saved to Sheets!';
+        setTimeout(function() { btn.textContent = '💾 Save Payroll Record'; btn.disabled = false; }, 2500);
+        renderHistory();
+      } else {
+        throw new Error(data.message || 'Unknown error');
+      }
+    })
+    .catch(function(err) {
+      // GETが失敗した場合はローカルに保存してエラー表示
+      saveLocalFallback(rec);
+      btn.disabled = false;
+      btn.textContent = '⚠ Sheets error — saved locally';
+      setTimeout(function() { btn.textContent = '💾 Save Payroll Record'; btn.disabled = false; }, 3000);
+      renderHistory();
+    });
 }
 
 function buildRecord() {
@@ -1331,11 +1339,7 @@ function deleteRecord(id) {
 
   // Sheetsからも削除
   if (gasReady()) {
-    fetch(GAS_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'delete', id: id })
-    }).catch(function(){});
+    fetch(GAS_URL + '?action=delete&id=' + id).catch(function(){});
   }
   renderHistory();
 }

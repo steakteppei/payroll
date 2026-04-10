@@ -1,44 +1,48 @@
 // ============================================================
-// Steak Teppei — Payroll History Google Apps Script
+// Steak Teppei — Payroll History Google Apps Script v1.1
 // ============================================================
-// セットアップ手順：
-// 1. https://sheets.new でスプレッドシートを新規作成
-// 2. 拡張機能 → Apps Script を開く
-// 3. このファイルの中身を全部コピペして保存
-// 4. デプロイ → 新しいデプロイ → ウェブアプリ
-//    - 実行ユーザー: 自分
-//    - アクセスできるユーザー: 全員
-// 5. デプロイ後に表示されるURLをpayroll.htmlのGAS_URLに貼り付ける
+// 【重要】デプロイ設定：
+//   実行ユーザー: 自分
+//   アクセスできるユーザー: 全員（匿名ユーザーを含む）
+// 変更後は必ず「新しいデプロイ」を作成してURLを更新すること
 // ============================================================
 
-var SHEET_NAME = 'Payroll History';
+var SHEET_NAME   = 'Payroll History';
 var DETAIL_SHEET = 'Payroll Detail';
 
-// ── GET リクエスト（履歴一覧取得）──
+// ── GET リクエスト（全操作をGETで処理 → CORS問題を回避）──
 function doGet(e) {
-  var action = e && e.parameter && e.parameter.action;
-  if (action === 'list') {
-    return jsonResponse(getRecords());
+  var params = e && e.parameter ? e.parameter : {};
+  var action = params.action || 'list';
+
+  try {
+    if (action === 'list') {
+      return jsonResponse(getRecords());
+    }
+    if (action === 'save') {
+      var rec = JSON.parse(decodeURIComponent(params.data || '{}'));
+      saveRecord(rec);
+      return jsonResponse({ status: 'ok' });
+    }
+    if (action === 'delete') {
+      deleteRecord(params.id);
+      return jsonResponse({ status: 'ok' });
+    }
+    return jsonResponse({ status: 'ok', message: 'ST Payroll GAS v1.1 running' });
+  } catch(err) {
+    return jsonResponse({ status: 'error', message: err.message });
   }
-  return jsonResponse({ status: 'ok', message: 'ST Payroll GAS running' });
 }
 
-// ── POST リクエスト（保存・削除）──
+// doPostも残す（フォールバック用）
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
     var action = body.action;
-
-    if (action === 'save') {
-      saveRecord(body.record);
-      return jsonResponse({ status: 'ok' });
-    }
-    if (action === 'delete') {
-      deleteRecord(body.id);
-      return jsonResponse({ status: 'ok' });
-    }
+    if (action === 'save') { saveRecord(body.record); return jsonResponse({ status: 'ok' }); }
+    if (action === 'delete') { deleteRecord(body.id); return jsonResponse({ status: 'ok' }); }
     return jsonResponse({ status: 'error', message: 'Unknown action' });
-  } catch (err) {
+  } catch(err) {
     return jsonResponse({ status: 'error', message: err.message });
   }
 }
@@ -47,13 +51,11 @@ function doPost(e) {
 function saveRecord(rec) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // ── サマリーシート ──
   var sh = getOrCreateSheet(ss, SHEET_NAME, [
     'ID', 'Saved At', 'From', 'To', 'Pay Date',
     'Total Tips ($)', 'Total Hours (h)', 'Tip Rate ($/h)', 'Employees'
   ]);
 
-  // 既存チェック（同期間の上書き）
   var data = sh.getDataRange().getValues();
   var existRow = -1;
   for (var i = 1; i < data.length; i++) {
@@ -65,12 +67,9 @@ function saveRecord(rec) {
   var summaryRow = [
     rec.id,
     rec.savedAt || new Date().toISOString(),
-    rec.from,
-    rec.to,
-    rec.payDate,
-    rec.tipsTotal,
-    rec.totalHours,
-    Math.round(rec.tipRate * 10000) / 10000,
+    rec.from, rec.to, rec.payDate,
+    rec.tipsTotal, rec.totalHours,
+    Math.round((rec.tipRate || 0) * 10000) / 10000,
     rec.employees ? rec.employees.length : 0
   ];
 
@@ -80,40 +79,27 @@ function saveRecord(rec) {
     sh.appendRow(summaryRow);
   }
 
-  // ── 詳細シート ──
   var dsh = getOrCreateSheet(ss, DETAIL_SHEET, [
     'Period ID', 'From', 'To', 'Pay Date',
     'Employee', 'Regular Hrs', 'OT Hrs', 'Tip Hours', 'Paycheck Tips ($)'
   ]);
 
-  // 既存の同期間の行を削除
   var ddata = dsh.getDataRange().getValues();
-  var toDelete = [];
   for (var i = ddata.length - 1; i >= 1; i--) {
     if (String(ddata[i][1]) === rec.from && String(ddata[i][2]) === rec.to) {
-      toDelete.push(i + 1);
+      dsh.deleteRow(i + 1);
     }
   }
-  toDelete.forEach(function(r) { dsh.deleteRow(r); });
 
-  // 従業員行を追記
   if (rec.employees) {
     rec.employees.forEach(function(emp) {
       dsh.appendRow([
-        rec.id,
-        rec.from,
-        rec.to,
-        rec.payDate,
-        emp.display,
-        emp.reg,
-        emp.ot,
-        emp.tipHours,
-        emp.tips
+        rec.id, rec.from, rec.to, rec.payDate,
+        emp.display, emp.reg, emp.ot, emp.tipHours, emp.tips
       ]);
     });
   }
 
-  // 書式設定
   formatSheets(ss);
 }
 
@@ -121,12 +107,9 @@ function saveRecord(rec) {
 function getRecords() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) return { records: [] };
+  if (!sh || sh.getLastRow() < 2) return { records: [] };
 
   var data = sh.getDataRange().getValues();
-  if (data.length < 2) return { records: [] };
-
-  // ヘッダー行をスキップ、新しい順に返す
   var dsh = ss.getSheetByName(DETAIL_SHEET);
   var detailData = dsh ? dsh.getDataRange().getValues() : [];
 
@@ -134,8 +117,6 @@ function getRecords() {
   for (var i = data.length - 1; i >= 1; i--) {
     var row = data[i];
     var id = row[0];
-
-    // 対応する従業員行を取得
     var employees = [];
     for (var j = 1; j < detailData.length; j++) {
       if (String(detailData[j][0]) === String(id)) {
@@ -148,17 +129,9 @@ function getRecords() {
         });
       }
     }
-
     records.push({
-      id: id,
-      savedAt: row[1],
-      from: row[2],
-      to: row[3],
-      payDate: row[4],
-      tipsTotal: row[5],
-      totalHours: row[6],
-      tipRate: row[7],
-      employees: employees
+      id: id, savedAt: row[1], from: row[2], to: row[3], payDate: row[4],
+      tipsTotal: row[5], totalHours: row[6], tipRate: row[7], employees: employees
     });
   }
   return { records: records };
@@ -167,8 +140,6 @@ function getRecords() {
 // ── DELETE ──
 function deleteRecord(id) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-
-  // サマリーシート
   var sh = ss.getSheetByName(SHEET_NAME);
   if (sh) {
     var data = sh.getDataRange().getValues();
@@ -176,8 +147,6 @@ function deleteRecord(id) {
       if (String(data[i][0]) === String(id)) sh.deleteRow(i + 1);
     }
   }
-
-  // 詳細シート
   var dsh = ss.getSheetByName(DETAIL_SHEET);
   if (dsh) {
     var ddata = dsh.getDataRange().getValues();
@@ -205,7 +174,6 @@ function getOrCreateSheet(ss, name, headers) {
 function formatSheets(ss) {
   var sh = ss.getSheetByName(SHEET_NAME);
   if (sh && sh.getLastRow() > 1) {
-    // Tips列を通貨フォーマット
     sh.getRange(2, 6, sh.getLastRow() - 1, 1).setNumberFormat('$#,##0.00');
     sh.getRange(2, 7, sh.getLastRow() - 1, 1).setNumberFormat('#,##0.00');
     sh.getRange(2, 8, sh.getLastRow() - 1, 1).setNumberFormat('$#,##0.0000');
