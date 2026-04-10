@@ -487,16 +487,18 @@ function toggleEye() {
 }
 
 // ── 初期化 ──
-// 正しいパスワードのハッシュを起動時にセット
 // ★ パスワードを変えたい場合: CURRENT_PW の値を変えるだけでOK
 var CURRENT_PW = 'teppei2026';
-getHash(CURRENT_PW).then(function(h) { PW_HASH = h; });
 
-if (checkSession()) {
-  showMain();
-} else {
-  document.getElementById('pwInput').focus();
-}
+// ハッシュ生成完了後に初期化（順序保証）
+getHash(CURRENT_PW).then(function(h) {
+  PW_HASH = h;
+  if (checkSession()) {
+    showMain();
+  } else {
+    document.getElementById('pwInput').focus();
+  }
+});
 </script>
 </body>
 </html>
