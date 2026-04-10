@@ -89,6 +89,29 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 var HISTORY = [
   // ── payroll.html ──
   {
+    file: 'payroll.html', type: 'payroll', version: '2.0',
+    datetime: '2026-04-10 15:10:00',
+    changes: [
+      'Title changed from "ST PAYROLL" to "STEAK TEPPEI PAYROLL"',
+      'CSV upload: success message removed, zone turns green on load',
+      'History: simplified to "M/D/YY – M/D/YY $X,XXX" single line format',
+      'Date format changed to M/D/YY throughout'
+    ]
+  },
+  // ── home.html ──
+  {
+    file: 'home.html', type: 'home', version: '1.8',
+    datetime: '2026-04-10 15:10:00',
+    changes: ['Synced with payroll.html v2.0']
+  },
+  // ── sw-home.js ──
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.8',
+    datetime: '2026-04-10 15:10:00',
+    changes: ['Cache version updated to st-home-v1.8']
+  },
+  // ── payroll.html (continued) ──
+  {
     file: 'payroll.html', type: 'payroll', version: '1.9',
     datetime: '2026-04-10 14:50:00',
     changes: [
