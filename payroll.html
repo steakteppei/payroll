@@ -489,10 +489,67 @@ body {
 }
 .excel-btn:hover { background: rgba(59,130,246,0.2); }
 .excel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+/* ── TIP CONFIRM MODAL ── */
+.tip-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:center;justify-content:center;padding:16px;}
+.tip-modal-overlay.open{display:flex;}
+.tip-modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;}
+.tip-modal-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.tip-modal-title{font-size:14px;font-weight:700;color:var(--text);}
+.tip-modal-sub{font-size:11px;color:var(--text-hint);margin-top:2px;}
+.tip-modal-body{padding:12px 16px;flex:1;}
+.tip-confirm-table{width:100%;border-collapse:collapse;font-size:11px;}
+.tip-confirm-table th{text-align:left;padding:5px 8px;color:var(--text-hint);font-weight:600;border-bottom:1px solid var(--border2);font-size:10px;text-transform:uppercase;letter-spacing:.05em;}
+.tip-confirm-table td{padding:7px 8px;border-bottom:.5px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;}
+.tip-confirm-table tr:last-child td{border-bottom:none;}
+.tip-num{text-align:right;}
+.tip-amt{text-align:right;color:var(--yellow);font-weight:700;}
+.tip-pct{text-align:right;color:var(--text-hint);}
+.tip-confirm-total{display:flex;justify-content:space-between;align-items:center;padding:10px 8px;margin-top:8px;background:var(--surface2);border-radius:6px;}
+.tip-confirm-total-label{font-size:12px;color:var(--text-sub);font-weight:600;}
+.tip-confirm-total-val{color:var(--yellow);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:15px;}
+.tip-confirm-diff{font-size:10px;margin-top:4px;text-align:right;}
+.tip-confirm-diff.ok{color:var(--green);}
+.tip-confirm-diff.ng{color:var(--red);font-weight:700;}
+.tip-modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.tip-modal-ok{flex:1;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.tip-modal-cancel{padding:11px 16px;background:var(--surface2);color:var(--text-hint);border:1px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.paydate-reason{font-size:10px;color:var(--yellow);margin-top:3px;}
 </style>
 </head>
 <body>
 <div class="app">
+
+<!-- TIP CONFIRM MODAL -->
+<div class="tip-modal-overlay" id="tipConfirmOverlay">
+  <div class="tip-modal">
+    <div class="tip-modal-header">
+      <div class="tip-modal-title">✦ Tip Distribution — Confirm</div>
+      <div class="tip-modal-sub" id="tipModalSub"></div>
+    </div>
+    <div class="tip-modal-body">
+      <table class="tip-confirm-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th class="tip-num">Tip Hrs</th>
+            <th class="tip-pct">Share %</th>
+            <th class="tip-amt">Tips</th>
+          </tr>
+        </thead>
+        <tbody id="tipConfirmBody"></tbody>
+      </table>
+      <div class="tip-confirm-total">
+        <span class="tip-confirm-total-label">Total Distributed</span>
+        <span class="tip-confirm-total-val" id="tipConfirmTotal"></span>
+      </div>
+      <div class="tip-confirm-diff" id="tipConfirmDiff"></div>
+    </div>
+    <div class="tip-modal-footer">
+      <button class="tip-modal-cancel" onclick="closeTipConfirm()">← Back</button>
+      <button class="tip-modal-ok" onclick="confirmAndProceed()">Looks Good — Proceed →</button>
+    </div>
+  </div>
+</div>
 
   <!-- TOP BAR -->
   <div class="topbar">
@@ -545,6 +602,7 @@ body {
           <div class="field-row" style="margin-top:8px;">
             <div class="field-label">Pay Date</div>
             <input class="field-input" type="date" id="payDate">
+            <div class="paydate-reason" id="payDateReason"></div>
           </div>
           <div class="field-row">
             <div class="field-label">Total Tips (Clover) $</div>
@@ -621,7 +679,7 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION = '1.4';
+var PAYROLL_VERSION = '1.5';
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -711,8 +769,14 @@ function parseCSV(text, filename) {
 
   // Pay Dateを自動計算（期間のToから7日か22日を決定、祝日・土日は前倒し）
   if (toStr) {
-    var autoPayDate = calcPayDate(toStr);
-    document.getElementById('payDate').value = autoPayDate;
+    var autoPayResult = calcPayDate(toStr);
+    document.getElementById('payDate').value = autoPayResult.date;
+    var reasonEl = document.getElementById('payDateReason');
+    if (autoPayResult.reason) {
+      reasonEl.textContent = autoPayResult.reason;
+    } else {
+      reasonEl.textContent = '';
+    }
   }
 
   // Show success
@@ -760,25 +824,53 @@ function prevBusinessDay(dt) {
 function pad2(n) { return n < 10 ? '0' + n : String(n); }
 
 function calcPayDate(toStr) {
-  // toStrはYYYY-MM-DD
   var parts = toStr.split('-');
   var toDay = parseInt(parts[2]);
   var toMonth = parseInt(parts[1]);
   var toYear = parseInt(parts[0]);
+  var MNAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var DNAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
   var payDt;
   if (toDay <= 15) {
-    // 1〜15日の期間 → Pay Date = 同月22日
     payDt = new Date(toYear, toMonth - 1, 22);
   } else {
-    // 16〜末日の期間 → Pay Date = 翌月7日
-    payDt = new Date(toYear, toMonth, 7); // toMonthは0-indexedなので+1が翌月
+    payDt = new Date(toYear, toMonth, 7);
   }
 
-  // 祝日・土日なら前倒し
+  var origStr = payDt.getFullYear() + '-' + pad2(payDt.getMonth()+1) + '-' + pad2(payDt.getDate());
+  var origDow = DNAMES[payDt.getDay()];
+  var origLabel = MNAMES[payDt.getMonth()] + ' ' + payDt.getDate();
+  var isHol = isHIHoliday(origStr);
+  var isSat = payDt.getDay() === 6;
+  var isSun = payDt.getDay() === 0;
+
   var bizDt = prevBusinessDay(payDt);
-  return bizDt.getFullYear() + '-' + pad2(bizDt.getMonth()+1) + '-' + pad2(bizDt.getDate());
+  var resultStr = bizDt.getFullYear() + '-' + pad2(bizDt.getMonth()+1) + '-' + pad2(bizDt.getDate());
+  var bizLabel = MNAMES[bizDt.getMonth()] + ' ' + bizDt.getDate() + ' (' + DNAMES[bizDt.getDay()] + ')';
+
+  var reason = '';
+  if (resultStr !== origStr) {
+    var why = isHol ? (HI_HOLIDAYS_NAMES[origStr] + ' (Hawaii holiday)') : (isSun ? 'Sunday' : 'Saturday');
+    reason = '⚠ ' + origLabel + ' (' + origDow + ') is a ' + why + ' → moved to ' + bizLabel;
+  }
+
+  return { date: resultStr, reason: reason };
 }
+
+// 祝日名マップ（理由表示用）
+var HI_HOLIDAYS_NAMES = {
+  '2026-01-01':"New Year's Day",'2026-01-19':'MLK Day','2026-02-16':'Presidents Day',
+  '2026-03-26':'Prince Kuhio Day','2026-04-03':'Good Friday','2026-05-25':'Memorial Day',
+  '2026-06-11':'King Kamehameha Day','2026-07-03':'Independence Day (observed)',
+  '2026-08-21':'Statehood Day','2026-09-07':'Labor Day','2026-11-03':'General Election Day',
+  '2026-11-11':'Veterans Day','2026-11-26':'Thanksgiving','2026-12-25':'Christmas',
+  '2027-01-01':"New Year's Day",'2027-01-18':'MLK Day','2027-02-15':'Presidents Day',
+  '2027-03-26':'Prince Kuhio Day / Good Friday','2027-05-31':'Memorial Day',
+  '2027-06-11':'King Kamehameha Day','2027-07-05':'Independence Day (observed)',
+  '2027-08-20':'Statehood Day','2027-09-06':'Labor Day','2027-11-11':'Veterans Day',
+  '2027-11-25':'Thanksgiving','2027-12-27':'Christmas (observed)'
+};
 
 function parseCSVRow(line) {
   var result = [], cur = '', inQ = false;
@@ -858,6 +950,52 @@ function calculate() {
     payDate: document.getElementById('payDate').value
   };
 
+  // チップ按分確認モーダルを表示
+  showTipConfirm();
+}
+
+function showTipConfirm() {
+  var r = calcResult;
+  document.getElementById('tipModalSub').textContent =
+    'Period: ' + fmtDateShort(r.from) + ' – ' + fmtDateShort(r.to) +
+    '  |  Total Tips: $' + r.tipsTotal.toFixed(2) +
+    '  |  Rate: $' + r.tipRate.toFixed(4) + '/h';
+
+  var html = '';
+  r.employees.forEach(function(e) {
+    var pct = r.totalTipHours > 0 ? (e.tipHours / r.totalTipHours * 100).toFixed(1) : '0.0';
+    var note = e.key === 'kacee' ? ' (fixed)' : (e.isSalaried ? ' (salary)' : '');
+    html += '<tr>'
+      + '<td>' + e.display + '</td>'
+      + '<td class="tip-num">' + e.tipHours.toFixed(2) + note + '</td>'
+      + '<td class="tip-pct">' + pct + '%</td>'
+      + '<td class="tip-amt">$' + e.tips.toFixed(2) + '</td>'
+      + '</tr>';
+  });
+  document.getElementById('tipConfirmBody').innerHTML = html;
+
+  var total = r.employees.reduce(function(s, e) { return s + e.tips; }, 0);
+  document.getElementById('tipConfirmTotal').textContent = '$' + total.toFixed(2);
+
+  var diff = Math.abs(total - r.tipsTotal);
+  var diffEl = document.getElementById('tipConfirmDiff');
+  if (diff < 0.02) {
+    diffEl.className = 'tip-confirm-diff ok';
+    diffEl.textContent = '✓ Matches input ($' + r.tipsTotal.toFixed(2) + ') — rounding diff: $' + diff.toFixed(2);
+  } else {
+    diffEl.className = 'tip-confirm-diff ng';
+    diffEl.textContent = '⚠ Difference: $' + diff.toFixed(2) + ' (input: $' + r.tipsTotal.toFixed(2) + ')';
+  }
+
+  document.getElementById('tipConfirmOverlay').classList.add('open');
+}
+
+function closeTipConfirm() {
+  document.getElementById('tipConfirmOverlay').classList.remove('open');
+}
+
+function confirmAndProceed() {
+  closeTipConfirm();
   copiedState = {};
   renderTable();
   renderSummary();

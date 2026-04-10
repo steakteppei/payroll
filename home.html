@@ -185,7 +185,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v1.4 · April 10, 2026 — View full version history ›</div>
+    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v1.5 · April 10, 2026 — View full version history ›</div>
   </div>
 </div>
 
@@ -203,10 +203,19 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION  = '1.4';
+var APP_VERSION  = '1.5';
 var APP_DATE     = 'April 10, 2026';
-var APP_DATETIME = '2026-04-10 13:03:21';
+var APP_DATETIME = 'PLACEHOLDER';
 var CHANGELOG = [
+  {
+    version: '1.5',
+    date: 'April 10, 2026',
+    items: [
+      'Tip distribution confirmation modal added before proceeding to QBO copy',
+      'Pay Date forward reason displayed (holiday name / Saturday / Sunday)',
+      'Two Miles payroll submission clarified — QBO only, no Excel needed'
+    ]
+  },
   {
     version: '1.4',
     date: 'April 10, 2026',

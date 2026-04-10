@@ -89,6 +89,11 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 var HISTORY = [
   // ── home.html ──
   {
+    file: 'home.html', type: 'home', version: '1.5',
+    datetime: '2026-04-10 14:00:00',
+    changes: ['Changelog updated with v1.5 entries']
+  },
+  {
     file: 'home.html', type: 'home', version: '1.4',
     datetime: '2026-04-10 13:00:00',
     changes: ['Version update rule enforced — all files now versioned on every change']
@@ -130,6 +135,11 @@ var HISTORY = [
     ]
   },
   // ── sw-home.js ──
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.5',
+    datetime: '2026-04-10 14:00:00',
+    changes: ['Cache version updated to st-home-v1.5']
+  },
   {
     file: 'sw-home.js', type: 'sw', version: '1.4',
     datetime: '2026-04-10 13:00:00',
@@ -175,6 +185,16 @@ var HISTORY = [
     ]
   },
   // ── payroll.html ──
+  {
+    file: 'payroll.html', type: 'payroll', version: '1.5',
+    datetime: '2026-04-10 14:00:00',
+    changes: [
+      'Tip distribution confirmation modal — shows each employee\'s hours, share %, and tips before proceeding',
+      'Pay Date forward reason displayed (e.g. "Mar 22 (Sunday) is a Sunday → moved to Mar 20 (Friday)")',
+      'HI_HOLIDAYS_NAMES map added for holiday name display',
+      'calcPayDate now returns {date, reason} object'
+    ]
+  },
   {
     file: 'payroll.html', type: 'payroll', version: '1.4',
     datetime: '2026-04-10 13:00:00',
