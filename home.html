@@ -3,329 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ST Tools">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ST Tools">
 <title>Steak Teppei — Tools</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap');
-
-:root {
-  --bg: #0f1117;
-  --surface: #171b24;
-  --surface2: #1e2330;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.14);
-  --text: #e8eaf0;
-  --text-sub: #8892a4;
-  --text-hint: #4a5568;
-  --orange: #f97316;
-  --orange-dim: rgba(249,115,22,0.12);
-  --green: #22c55e;
-  --green-dim: rgba(34,197,94,0.1);
-  --blue: #3b82f6;
-  --blue-dim: rgba(59,130,246,0.1);
-  --red: #ef4444;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-html, body {
-  height: 100%;
-  background: var(--bg);
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  color: var(--text);
-}
-
-/* ── LOCK SCREEN ── */
-.lock-screen {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 24px;
-}
-
-.lock-box {
-  width: 100%;
-  max-width: 320px;
-}
-
-.lock-logo {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.lock-logo-mark {
-  display: inline-block;
-  width: 52px;
-  height: 52px;
-  background: var(--orange);
-  border-radius: 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 18px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 52px;
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.lock-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.3px;
-}
-
-.lock-sub {
-  font-size: 12px;
-  color: var(--text-hint);
-  margin-top: 3px;
-}
-
-.lock-field {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.lock-input {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  padding: 13px 44px 13px 14px;
-  color: var(--text);
-  font-size: 15px;
-  font-family: 'JetBrains Mono', monospace;
-  outline: none;
-  letter-spacing: 0.15em;
-  transition: border-color 0.15s;
-}
-
-.lock-input:focus { border-color: var(--orange); }
-.lock-input.error { border-color: var(--red); animation: shake 0.3s ease; }
-
-@keyframes shake {
-  0%,100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
-}
-
-.eye-btn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-hint);
-  font-size: 16px;
-  padding: 4px;
-  transition: color 0.15s;
-}
-.eye-btn:hover { color: var(--text-sub); }
-
-.lock-btn {
-  width: 100%;
-  padding: 13px;
-  background: var(--orange);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  transition: opacity 0.15s;
-  letter-spacing: -0.2px;
-}
-.lock-btn:hover { opacity: 0.9; }
-.lock-btn:active { opacity: 0.8; }
-
-.lock-error {
-  text-align: center;
-  font-size: 12px;
-  color: var(--red);
-  margin-top: 10px;
-  min-height: 18px;
-  transition: opacity 0.2s;
-}
-
-.lock-remember {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  cursor: pointer;
-}
-.lock-remember input { accent-color: var(--orange); width: 14px; height: 14px; cursor: pointer; }
-.lock-remember span { font-size: 12px; color: var(--text-sub); }
-
-/* ── MAIN SCREEN ── */
-.main-screen {
-  display: none;
-  min-height: 100%;
-  padding: 0 0 40px;
-}
-
-.topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 16px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.topbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.topbar-mark {
-  width: 28px;
-  height: 28px;
-  background: var(--orange);
-  border-radius: 7px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.topbar-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.2px;
-}
-
-.topbar-subtitle {
-  font-size: 10px;
-  color: var(--text-hint);
-}
-
-.lock-out-btn {
-  background: none;
-  border: 1px solid var(--border2);
-  border-radius: 6px;
-  padding: 5px 10px;
-  font-size: 11px;
-  color: var(--text-hint);
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  transition: all 0.15s;
-}
-.lock-out-btn:hover { border-color: var(--red); color: var(--red); }
-
-/* ── CARDS ── */
-.cards {
-  padding: 20px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.section-label {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-hint);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 4px;
-  padding: 0 2px;
-}
-
-.app-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: border-color 0.15s, background 0.15s;
-  cursor: pointer;
-}
-.app-card:active { opacity: 0.8; transform: scale(0.99); }
-
-.app-card.orange:hover { border-color: var(--orange); background: var(--orange-dim); }
-.app-card.blue:hover   { border-color: var(--blue);   background: var(--blue-dim); }
-.app-card.green:hover  { border-color: var(--green);  background: var(--green-dim); }
-
-.app-card-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-.icon-orange { background: var(--orange-dim); }
-.icon-blue   { background: var(--blue-dim); }
-.icon-green  { background: var(--green-dim); }
-
-.app-card-body { flex: 1; min-width: 0; }
-.app-card-title { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
-.app-card-desc  { font-size: 11px; color: var(--text-sub); margin-top: 2px; line-height: 1.4; }
-.app-card-badge {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 20px;
-  margin-top: 5px;
-  display: inline-block;
-}
-.badge-orange { background: var(--orange-dim); color: var(--orange); }
-.badge-blue   { background: var(--blue-dim);   color: var(--blue); }
-
-.app-card-arrow { font-size: 18px; color: var(--text-hint); flex-shrink: 0; }
-
-/* Private badge */
-.private-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-hint);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 3px 9px;
-  margin-left: 8px;
-}
-
-.version-note {
-  text-align: center;
-  font-size: 10px;
-  color: var(--text-hint);
-  padding: 16px 0 4px;
-  opacity: 0.5;
-}
+:root{--bg:#0f1117;--surface:#171b24;--surface2:#1e2330;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#e8eaf0;--text-sub:#8892a4;--text-hint:#4a5568;--orange:#f97316;--orange-dim:rgba(249,115,22,0.12);--green:#22c55e;--green-dim:rgba(34,197,94,0.1);--blue:#3b82f6;--blue-dim:rgba(59,130,246,0.1);--red:#ef4444;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;color:var(--text);}
+.lock-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;padding:24px;}
+.lock-box{width:100%;max-width:320px;}
+.lock-logo{text-align:center;margin-bottom:32px;}
+.lock-logo-mark{display:inline-block;width:52px;height:52px;background:var(--orange);border-radius:14px;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:#fff;line-height:52px;text-align:center;margin-bottom:12px;}
+.lock-title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-.3px;}
+.lock-sub{font-size:12px;color:var(--text-hint);margin-top:3px;}
+.lock-field{position:relative;margin-bottom:12px;}
+.lock-input{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:13px 44px 13px 14px;color:var(--text);font-size:15px;font-family:'JetBrains Mono',monospace;outline:none;letter-spacing:.15em;transition:border-color .15s;}
+.lock-input:focus{border-color:var(--orange);}
+.lock-input.error{border-color:var(--red);animation:shake .3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-hint);font-size:16px;padding:4px;}
+.lock-btn{width:100%;padding:13px;background:var(--orange);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s;}
+.lock-btn:hover{opacity:.9;}
+.lock-error{text-align:center;font-size:12px;color:var(--red);margin-top:10px;min-height:18px;}
+.lock-remember{display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer;}
+.lock-remember input{accent-color:var(--orange);width:14px;height:14px;cursor:pointer;}
+.lock-remember span{font-size:12px;color:var(--text-sub);}
+.main-screen{display:none;min-height:100vh;padding:0 0 40px;}
+.update-banner{display:none;background:#185FA5;color:#fff;text-align:center;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;}
+.update-banner.show{display:block;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-brand{display:flex;align-items:center;gap:10px;}
+.topbar-mark{width:28px;height:28px;background:var(--orange);border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.2px;}
+.topbar-subtitle{font-size:10px;color:var(--text-hint);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.whats-new-btn{background:none;border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text-hint);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.whats-new-btn:hover{border-color:var(--orange);color:var(--orange);}
+.lock-out-btn{background:none;border:1px solid var(--border2);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text-hint);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.lock-out-btn:hover{border-color:var(--red);color:var(--red);}
+.cards{padding:20px 16px;display:flex;flex-direction:column;gap:12px;max-width:480px;margin:0 auto;}
+.section-label{font-size:10px;font-weight:600;color:var(--text-hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;padding:0 2px;}
+.app-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-decoration:none;display:flex;align-items:center;gap:14px;transition:border-color .15s,background .15s;}
+.app-card:active{opacity:.8;transform:scale(.99);}
+.app-card.orange:hover{border-color:var(--orange);background:var(--orange-dim);}
+.app-card.blue:hover{border-color:var(--blue);background:var(--blue-dim);}
+.app-card.green:hover{border-color:var(--green);background:var(--green-dim);}
+.app-card-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.icon-orange{background:var(--orange-dim);}
+.icon-blue{background:var(--blue-dim);}
+.icon-green{background:var(--green-dim);}
+.app-card-body{flex:1;min-width:0;}
+.app-card-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.2px;}
+.app-card-desc{font-size:11px;color:var(--text-sub);margin-top:2px;line-height:1.4;}
+.app-card-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:5px;display:inline-block;}
+.badge-orange{background:var(--orange-dim);color:var(--orange);}
+.badge-blue{background:var(--blue-dim);color:var(--blue);}
+.app-card-arrow{font-size:18px;color:var(--text-hint);flex-shrink:0;}
+.private-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-hint);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 9px;margin-left:8px;}
+.version-note{text-align:center;font-size:10px;color:var(--text-hint);padding:16px 0 4px;opacity:.5;cursor:pointer;}
+.version-note:hover{opacity:1;color:var(--orange);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:22px 20px;width:100%;max-width:420px;max-height:80vh;overflow-y:auto;}
+.modal-tag{display:inline-block;background:var(--orange);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:10px;letter-spacing:.04em;}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.modal-date{font-size:11px;color:var(--text-hint);margin-bottom:14px;}
+.modal-items{list-style:none;padding:0;margin:0 0 16px;}
+.modal-items li{font-size:13px;color:var(--text-sub);padding:5px 0;border-bottom:.5px solid var(--border);line-height:1.5;}
+.modal-items li:last-child{border-bottom:none;}
+.modal-items li::before{content:"✦ ";color:var(--orange);font-size:10px;}
+.modal-close{width:100%;padding:12px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 </style>
 </head>
 <body>
 
-<!-- ── LOCK SCREEN ── -->
 <div class="lock-screen" id="lockScreen">
   <div class="lock-box">
     <div class="lock-logo">
@@ -333,31 +89,22 @@ html, body {
       <div class="lock-title">Steak Teppei Tools</div>
       <div class="lock-sub">Makai Market · Ala Moana Center</div>
     </div>
-
     <div class="lock-field">
-      <input
-        class="lock-input"
-        type="password"
-        id="pwInput"
-        placeholder="Enter password"
-        autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')unlock()"
-      >
+      <input class="lock-input" type="password" id="pwInput" placeholder="Enter password"
+        autocomplete="current-password" onkeydown="if(event.key==='Enter')unlock()">
       <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" tabindex="-1">👁</button>
     </div>
-
     <label class="lock-remember">
       <input type="checkbox" id="rememberMe" checked>
       <span>Keep me logged in for 30 days</span>
     </label>
-
     <button class="lock-btn" onclick="unlock()">Unlock →</button>
     <div class="lock-error" id="lockError"></div>
   </div>
 </div>
 
-<!-- ── MAIN SCREEN ── -->
 <div class="main-screen" id="mainScreen">
+  <div class="update-banner" id="updateBanner" onclick="doUpdate()">🔄 New version available — click to update</div>
   <div class="topbar">
     <div class="topbar-brand">
       <div class="topbar-mark">ST</div>
@@ -366,11 +113,13 @@ html, body {
         <div class="topbar-subtitle">Makai Market · Ala Moana Center</div>
       </div>
     </div>
-    <button class="lock-out-btn" onclick="lockOut()">🔒 Lock</button>
+    <div class="topbar-right">
+      <button class="whats-new-btn" onclick="openChangelog()">What's New</button>
+      <button class="lock-out-btn" onclick="lockOut()">🔒 Lock</button>
+    </div>
   </div>
 
   <div class="cards">
-
     <div class="section-label">Operations</div>
 
     <a class="app-card orange" href="https://steakteppei.github.io/order-app/">
@@ -417,83 +166,134 @@ html, body {
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note">Last updated: April 10, 2026</div>
+    <div class="version-note" id="versionNote" onclick="openChangelog()">v1.0 · April 10, 2026</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="changelogOverlay">
+  <div class="modal-box">
+    <div class="modal-tag">WHAT'S NEW</div>
+    <div class="modal-title" id="cl-version"></div>
+    <div class="modal-date" id="cl-date"></div>
+    <ul class="modal-items" id="cl-items"></ul>
+    <button class="modal-close" onclick="closeChangelog()">Got it!</button>
   </div>
 </div>
 
 <script>
-// ★ パスワード設定 — 変更する場合はここだけ書き換える
-var CURRENT_PW = 'teppei2026';
+// ════════════════════════════════════════
+// ★ 更新のたびにここを編集する
+// ════════════════════════════════════════
+var APP_VERSION = '1.0';
+var APP_DATE    = 'April 10, 2026';
+var CHANGELOG = [
+  {
+    version: '1.0',
+    date: 'April 10, 2026',
+    items: [
+      'Steak Teppei Tools home screen launched',
+      'Password-protected access (30-day session)',
+      'Links: Order App / Sales Data / Inventory / Payroll',
+      'What\'s New changelog feature added',
+      'Auto-update via Service Worker'
+    ]
+  }
+];
 
+// ════════════════════════════════════════
+// ★ パスワード変更はここだけ
+// ════════════════════════════════════════
+var CURRENT_PW  = 'teppei2026';
 var SESSION_KEY = 'st_tools_auth';
+var CL_KEY      = 'st_tools_cl_seen';
 
 function checkSession() {
   try {
-    var raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return false;
-    var s = JSON.parse(raw);
-    if (!s.expiry || Date.now() > s.expiry) {
-      localStorage.removeItem(SESSION_KEY);
-      return false;
-    }
+    var s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    if (!s || !s.expiry || Date.now() > s.expiry) { localStorage.removeItem(SESSION_KEY); return false; }
     return s.pw === CURRENT_PW;
   } catch(e) { return false; }
 }
-
 function saveSession() {
   var days = document.getElementById('rememberMe').checked ? 30 : 0;
-  var expiry = Date.now() + (days > 0 ? days * 86400000 : 3600000);
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ pw: CURRENT_PW, expiry: expiry }));
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ pw: CURRENT_PW, expiry: Date.now() + (days > 0 ? days * 86400000 : 3600000) }));
 }
-
 function unlock() {
   var pw = document.getElementById('pwInput').value;
   if (!pw) return;
   if (pw === CURRENT_PW) {
-    saveSession();
-    showMain();
+    saveSession(); showMain(); checkChangelog();
   } else {
     var inp = document.getElementById('pwInput');
-    var err = document.getElementById('lockError');
     inp.classList.add('error');
-    err.textContent = 'Incorrect password';
-    setTimeout(function() {
-      inp.classList.remove('error');
-      err.textContent = '';
-    }, 1500);
-    inp.value = '';
-    inp.focus();
+    document.getElementById('lockError').textContent = 'Incorrect password';
+    setTimeout(function() { inp.classList.remove('error'); document.getElementById('lockError').textContent = ''; }, 1500);
+    inp.value = ''; inp.focus();
   }
 }
-
 function showMain() {
-  var lock = document.getElementById('lockScreen');
-  var main = document.getElementById('mainScreen');
-  lock.style.cssText = 'display:none !important';
-  main.style.cssText = 'display:block !important; min-height:100vh; padding:0 0 40px;';
+  document.getElementById('lockScreen').style.cssText = 'display:none !important';
+  document.getElementById('mainScreen').style.cssText = 'display:block !important; min-height:100vh; padding:0 0 40px;';
+  document.getElementById('versionNote').textContent = 'v' + APP_VERSION + ' · ' + APP_DATE;
 }
-
 function lockOut() {
   localStorage.removeItem(SESSION_KEY);
-  document.getElementById('mainScreen').style.display = 'none';
-  document.getElementById('lockScreen').style.display = 'flex';
+  document.getElementById('mainScreen').style.cssText = 'display:none !important';
+  document.getElementById('lockScreen').style.cssText = 'display:flex !important; align-items:center; justify-content:center;';
   document.getElementById('pwInput').value = '';
   document.getElementById('lockError').textContent = '';
 }
-
 function toggleEye() {
   var inp = document.getElementById('pwInput');
-  var btn = document.getElementById('eyeBtn');
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
-  else { inp.type = 'password'; btn.textContent = '👁'; }
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  document.getElementById('eyeBtn').textContent = inp.type === 'password' ? '👁' : '🙈';
+}
+function openChangelog() {
+  var latest = CHANGELOG[0];
+  document.getElementById('cl-version').textContent = 'Version ' + latest.version;
+  document.getElementById('cl-date').textContent = latest.date;
+  var ul = document.getElementById('cl-items');
+  ul.innerHTML = '';
+  latest.items.forEach(function(item) { var li = document.createElement('li'); li.textContent = item; ul.appendChild(li); });
+  document.getElementById('changelogOverlay').classList.add('open');
+}
+function closeChangelog() {
+  localStorage.setItem(CL_KEY, APP_VERSION);
+  document.getElementById('changelogOverlay').classList.remove('open');
+}
+function checkChangelog() {
+  if (localStorage.getItem(CL_KEY) !== APP_VERSION) openChangelog();
 }
 
-// ── 初期化（同期処理）──
-if (checkSession()) {
-  showMain();
-} else {
-  document.getElementById('pwInput').focus();
+// ── Service Worker（強制更新）──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw-home.js').then(function(reg) {
+    reg.addEventListener('updatefound', function() {
+      var nw = reg.installing;
+      nw.addEventListener('statechange', function() {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          nw.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    });
+    if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    setInterval(function() { reg.update(); }, 30000);
+  });
+  var refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (!refreshing) { refreshing = true; window.location.reload(); }
+  });
 }
+function doUpdate() {
+  navigator.serviceWorker.getRegistration().then(function(reg) {
+    if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    else window.location.reload();
+  });
+}
+
+// ── Init ──
+if (checkSession()) { showMain(); checkChangelog(); }
+else { document.getElementById('pwInput').focus(); }
 </script>
 </body>
 </html>
