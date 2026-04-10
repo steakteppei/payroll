@@ -87,6 +87,24 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 // ★ 更新のたびにここに追記する（新しいものを上に追加）
 // ════════════════════════════════════════════════════════
 var HISTORY = [
+  {
+    file: 'payroll.html', type: 'payroll', version: '2.1',
+    datetime: '2026-04-10 15:30:00',
+    changes: [
+      'Totals bar moved to top of right panel',
+      'Totals bar sticky — stays visible while scrolling employee list'
+    ]
+  },
+  {
+    file: 'home.html', type: 'home', version: '1.9',
+    datetime: '2026-04-10 15:30:00',
+    changes: ['Synced with payroll.html v2.1']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.9',
+    datetime: '2026-04-10 15:30:00',
+    changes: ['Cache updated to st-home-v1.9']
+  },
   // ── payroll.html ──
   {
     file: 'payroll.html', type: 'payroll', version: '2.0',

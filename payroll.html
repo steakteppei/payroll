@@ -460,13 +460,15 @@ body {
 /* Totals row */
 .totals-row {
   background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-bottom: 1px solid var(--border2);
+  padding: 8px 14px;
   display: flex;
   gap: 24px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin-bottom: 8px;
 }
 .total-item { display: flex; flex-direction: column; gap: 2px; }
 .total-label { font-size: 9px; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.06em; }
@@ -667,6 +669,7 @@ body {
         <div class="empty-state-text">Load CSV and calculate to see payroll data</div>
       </div>
       <div id="tableWrap" style="display:none;">
+        <div class="totals-row" id="totalsRow" style="display:none;"></div>
         <div class="right-header">
           <div class="right-header-title">Copy to QuickBooks Payroll</div>
           <div style="display:flex;align-items:center;gap:8px;">
@@ -678,7 +681,6 @@ body {
           </div>
         </div>
         <div class="emp-table-wrap" id="empTable"></div>
-        <div class="totals-row" id="totalsRow"></div>
       </div>
     </div>
 
@@ -689,8 +691,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '2.0';
-var PAYROLL_DATETIME = '2026-04-10 13:51:00'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '2.1';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -1098,6 +1100,7 @@ function renderTable() {
   var totalTips = calcResult.employees.reduce(function(s, e) { return s + e.tips; }, 0);
   var totalH   = calcResult.totalTipHours;
 
+  document.getElementById('totalsRow').style.display = 'flex';
   document.getElementById('totalsRow').innerHTML =
     '<div class="total-item"><div class="total-label">Tip Pool Hours</div><div class="total-val orange">' + totalH.toFixed(2) + 'h</div></div>' +
     '<div class="total-item"><div class="total-label">Total Reg Hrs</div><div class="total-val">' + totalReg.toFixed(2) + 'h</div></div>' +
