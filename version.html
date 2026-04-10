@@ -87,106 +87,161 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 // ★ 更新のたびにここに追記する（新しいものを上に追加）
 // ════════════════════════════════════════════════════════
 var HISTORY = [
+  // ── home.html ──
   {
-    file: 'payroll.html',
-    type: 'payroll',
-    version: '1.2',
-    datetime: '2026-04-10 12:30:00',
+    file: 'home.html', type: 'home', version: '1.4',
+    datetime: '2026-04-10 13:00:00',
+    changes: ['Version update rule enforced — all files now versioned on every change']
+  },
+  {
+    file: 'home.html', type: 'home', version: '1.3',
+    datetime: '2026-04-10 12:50:00',
     changes: [
-      'Pay Date auto-calculation added (7th / 22nd, Hawaii holidays considered)',
-      'Copy item label and value font sizes reduced to prevent overflow'
+      'Build datetime auto-injected by GitHub Actions (Hawaii time)',
+      'Latest Update banner now links to version history page',
+      'History button added to topbar'
     ]
   },
   {
-    file: 'home.html',
-    type: 'home',
-    version: '1.1',
+    file: 'home.html', type: 'home', version: '1.2',
+    datetime: '2026-04-10 12:35:00',
+    changes: [
+      'Version history page (version.html) linked from footer',
+      'Inventory app link added to Operations section'
+    ]
+  },
+  {
+    file: 'home.html', type: 'home', version: '1.1',
     datetime: '2026-04-10 12:20:00',
     changes: [
       'Latest Update banner added (version + datetime prominently displayed)',
-      'Inventory app link added to Operations section',
       'What\'s New button added to topbar'
     ]
   },
   {
-    file: 'sw-home.js',
-    type: 'sw',
-    version: '1.1',
-    datetime: '2026-04-10 12:20:00',
-    changes: [
-      'Cache version updated to st-home-v1.1'
-    ]
-  },
-  {
-    file: 'version.html',
-    type: 'version',
-    version: '1.0',
-    datetime: '2026-04-10 12:15:00',
-    changes: [
-      'Version history page created',
-      'Timeline view with file filter',
-      'All past updates documented'
-    ]
-  },
-  {
-    file: 'home.html',
-    type: 'home',
-    version: '1.0',
+    file: 'home.html', type: 'home', version: '1.0',
     datetime: '2026-04-10 12:00:00',
     changes: [
       'Steak Teppei Tools home screen launched',
       'Password-protected access with 30-day session',
-      'Links: Order App / Sales Data / Inventory / Payroll',
+      'Links: Order App / Sales Data / Payroll',
       'Changelog / What\'s New modal',
       'Service Worker auto-update support'
     ]
   },
+  // ── sw-home.js ──
   {
-    file: 'sw-home.js',
-    type: 'sw',
-    version: '1.0',
+    file: 'sw-home.js', type: 'sw', version: '1.4',
+    datetime: '2026-04-10 13:00:00',
+    changes: ['Cache version updated to st-home-v1.4']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.3',
+    datetime: '2026-04-10 12:50:00',
+    changes: ['Cache version updated to st-home-v1.3, version.html added to cache']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.2',
+    datetime: '2026-04-10 12:35:00',
+    changes: ['Cache version updated to st-home-v1.2']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.1',
+    datetime: '2026-04-10 12:20:00',
+    changes: ['Cache version updated to st-home-v1.1']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.0',
     datetime: '2026-04-10 12:00:00',
     changes: [
-      'Service Worker for home.html created',
+      'Service Worker for payroll repo created',
       'Network-first strategy with cache fallback',
       'Force update via SKIP_WAITING'
     ]
   },
+  // ── version.html ──
   {
-    file: 'payroll.html',
-    type: 'payroll',
-    version: '1.1',
+    file: 'version.html', type: 'version', version: '1.1',
+    datetime: '2026-04-10 13:00:00',
+    changes: ['Full version history updated with all past changes accurately']
+  },
+  {
+    file: 'version.html', type: 'version', version: '1.0',
+    datetime: '2026-04-10 12:35:00',
+    changes: [
+      'Version history page created',
+      'Timeline view with file-type filter',
+      'Color-coded by file type'
+    ]
+  },
+  // ── payroll.html ──
+  {
+    file: 'payroll.html', type: 'payroll', version: '1.4',
+    datetime: '2026-04-10 13:00:00',
+    changes: [
+      'PAYROLL_VERSION variable added for proper version tracking',
+      'Left panel font sizes reduced (upload success, tips input, calc btn)',
+      'panel-section-body padding reduced',
+      'left-panel padding and gap reduced'
+    ]
+  },
+  {
+    file: 'payroll.html', type: 'payroll', version: '1.3',
+    datetime: '2026-04-10 12:30:00',
+    changes: [
+      'Pay Date auto-calculation (7th/22nd, Hawaii holidays & weekends)',
+      'Copy item label font: 9px→8px, value font: 14px→12px'
+    ]
+  },
+  {
+    file: 'payroll.html', type: 'payroll', version: '1.2',
+    datetime: '2026-04-10 12:00:00',
+    changes: [
+      'Google Sheets save via Apps Script (GAS_URL integrated)',
+      'History loaded from Sheets on startup',
+      'Delete record syncs to Sheets',
+      'Section header / stat label / save-btn font sizes reduced'
+    ]
+  },
+  {
+    file: 'payroll.html', type: 'payroll', version: '1.1',
     datetime: '2026-04-10 11:30:00',
     changes: [
-      'Google Sheets save via Apps Script integrated',
-      'History loaded from Sheets on startup',
-      'Delete record syncs to Sheets'
+      'GAS_URL placeholder integrated (pre-Sheets setup)',
+      'localStorage fallback when GAS not configured'
     ]
   },
   {
-    file: 'gas_payroll.js',
-    type: 'gas',
-    version: '1.0',
-    datetime: '2026-04-10 11:00:00',
-    changes: [
-      'Google Apps Script for payroll history storage',
-      'doGet: list records, doPost: save/delete',
-      'Payroll History + Payroll Detail sheets auto-created',
-      'Currency and column formatting applied'
-    ]
-  },
-  {
-    file: 'payroll.html',
-    type: 'payroll',
-    version: '1.0',
+    file: 'payroll.html', type: 'payroll', version: '1.0',
     datetime: '2026-04-10 10:00:00',
     changes: [
       'Payroll app initial release',
-      'Homebase CSV upload and parsing',
-      'Tip distribution calculation (Kacee fixed 100h)',
+      'Homebase CSV upload and parsing (multi-role merging)',
+      'Tip distribution: Kacee fixed 100h, others by actual hours',
       'Copy to QuickBooks: Regular Hrs / OT Hrs / Paycheck Tips',
-      'Copy progress tracker with green highlight',
-      'Excel (CSV) download for Two Miles'
+      'Copy progress tracker with green row highlight',
+      'Excel (CSV) download for Two Miles',
+      'Pay Date auto-calculation (7th/22nd with Hawaii holiday logic)'
+    ]
+  },
+  // ── gas_payroll.js ──
+  {
+    file: 'gas_payroll.js', type: 'gas', version: '1.0',
+    datetime: '2026-04-10 11:00:00',
+    changes: [
+      'Google Apps Script for payroll history storage created',
+      'doGet: list records, doPost: save/delete',
+      'Payroll History + Payroll Detail sheets auto-created on first run',
+      'Currency formatting and auto column resize'
+    ]
+  },
+  // ── inject-datetime.yml ──
+  {
+    file: 'inject-datetime.yml', type: 'gas', version: '1.0',
+    datetime: '2026-04-10 12:50:00',
+    changes: [
+      'GitHub Actions workflow created',
+      'Auto-injects Hawaii time into APP_DATETIME on every push to main'
     ]
   }
 ];
