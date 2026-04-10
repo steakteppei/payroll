@@ -1,0 +1,43 @@
+name: Inject Build Datetime
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  inject-datetime:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Hawaii time (UTC-10)
+        id: dt
+        run: |
+          DATETIME=$(TZ='Pacific/Honolulu' date '+%Y-%m-%d %H:%M:%S')
+          echo "datetime=$DATETIME" >> $GITHUB_OUTPUT
+          echo "Hawaii time: $DATETIME"
+
+      - name: Inject datetime into home.html
+        run: |
+          DATETIME="${{ steps.dt.outputs.datetime }}"
+          # APP_DATETIME = '...' の値を置換
+          sed -i "s/var APP_DATETIME = '[^']*'/var APP_DATETIME = '$DATETIME'/" home.html
+          echo "Injected: $DATETIME"
+
+      - name: Inject datetime into version.html
+        run: |
+          DATETIME="${{ steps.dt.outputs.datetime }}"
+          # version.htmlの最初のdatetimeエントリ（最新バージョン）を更新
+          # LATEST_DATETIME = '...' の値を置換
+          sed -i "s/var LATEST_DATETIME = '[^']*'/var LATEST_DATETIME = '$DATETIME'/" version.html
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet || (git add home.html version.html && git commit -m "auto: inject build datetime ${{ steps.dt.outputs.datetime }}")
+          git push

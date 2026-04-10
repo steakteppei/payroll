@@ -123,11 +123,12 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
     </div>
     <div class="topbar-right">
       <button class="whats-new-btn" onclick="openChangelog()">What's New</button>
+      <button class="whats-new-btn" onclick="window.location.href='./version.html'" style="color:var(--text-hint);">History</button>
       <button class="lock-out-btn" onclick="lockOut()">🔒 Lock</button>
     </div>
   </div>
 
-  <div class="latest-banner" onclick="openChangelog()">
+  <div class="latest-banner" onclick="window.location.href='./version.html'">
     <div class="latest-banner-dot"></div>
     <div class="latest-banner-label">Latest Update</div>
     <div class="latest-banner-body">
@@ -184,7 +185,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v1.2 · April 10, 2026 — View full version history ›</div>
+    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v1.3 · April 10, 2026 — View full version history ›</div>
   </div>
 </div>
 
@@ -202,10 +203,19 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION  = '1.2';
+var APP_VERSION  = '1.3';
 var APP_DATE     = 'April 10, 2026';
-var APP_DATETIME = '2026-04-10 12:35:00';
+var APP_DATETIME = 'PLACEHOLDER';
 var CHANGELOG = [
+  {
+    version: '1.3',
+    date: 'April 10, 2026',
+    items: [
+      'Build datetime now auto-injected by GitHub Actions (Hawaii time)',
+      'Latest Update banner now links to full version history',
+      'History button added to topbar'
+    ]
+  },
   {
     version: '1.2',
     date: 'April 10, 2026',
