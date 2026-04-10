@@ -148,7 +148,7 @@ body {
 }
 
 .panel-section-body {
-  padding: 9px 10px;
+  padding: 7px 9px;
 }
 
 /* Upload zone */
@@ -229,7 +229,7 @@ body {
 /* Calc button */
 .calc-btn {
   width: 100%;
-  padding: 7px 4px;
+  padding: 6px 4px;
   background: var(--orange);
   color: #fff;
   border: none;
@@ -707,8 +707,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '1.7';
-var PAYROLL_DATETIME = '2026-04-10 13:29:43'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '1.8';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -1179,7 +1179,7 @@ function updateProgress() {
 // ── SAVE HISTORY ──
 // ── GOOGLE SHEETS CONFIG ──
 // ★ Apps Script Web App URL をここに貼り付ける（セットアップ後）
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbzJdyVO0JqFxMOLNRR8fCV3Og-aYOAbb1jt1ZHvgg4TDm7obZ1yNUX87EalWofxS8P4/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbwHOr7Tp5JT1gdN_xynM7FZ_Z4XOMIQQE8TGNmSBPZ1t2fAt660rydGXHluV7khGaqY/exec';
 
 // GAS_URLが未設定か確認
 function gasReady() { return GAS_URL && GAS_URL.length > 10; }
