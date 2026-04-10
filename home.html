@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ST Tools">
+<title>Steak Teppei — Tools</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0f1117;
+  --surface: #171b24;
+  --surface2: #1e2330;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf0;
+  --text-sub: #8892a4;
+  --text-hint: #4a5568;
+  --orange: #f97316;
+  --orange-dim: rgba(249,115,22,0.12);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.1);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.1);
+  --red: #ef4444;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  color: var(--text);
+}
+
+/* ── LOCK SCREEN ── */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.lock-box {
+  width: 100%;
+  max-width: 320px;
+}
+
+.lock-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.lock-logo-mark {
+  display: inline-block;
+  width: 52px;
+  height: 52px;
+  background: var(--orange);
+  border-radius: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 52px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.lock-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.lock-sub {
+  font-size: 12px;
+  color: var(--text-hint);
+  margin-top: 3px;
+}
+
+.lock-field {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.lock-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 13px 44px 13px 14px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  letter-spacing: 0.15em;
+  transition: border-color 0.15s;
+}
+
+.lock-input:focus { border-color: var(--orange); }
+.lock-input.error { border-color: var(--red); animation: shake 0.3s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-hint);
+  font-size: 16px;
+  padding: 4px;
+  transition: color 0.15s;
+}
+.eye-btn:hover { color: var(--text-sub); }
+
+.lock-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: opacity 0.15s;
+  letter-spacing: -0.2px;
+}
+.lock-btn:hover { opacity: 0.9; }
+.lock-btn:active { opacity: 0.8; }
+
+.lock-error {
+  text-align: center;
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 10px;
+  min-height: 18px;
+  transition: opacity 0.2s;
+}
+
+.lock-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+.lock-remember input { accent-color: var(--orange); width: 14px; height: 14px; cursor: pointer; }
+.lock-remember span { font-size: 12px; color: var(--text-sub); }
+
+/* ── MAIN SCREEN ── */
+.main-screen {
+  display: none;
+  min-height: 100%;
+  padding: 0 0 40px;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-mark {
+  width: 28px;
+  height: 28px;
+  background: var(--orange);
+  border-radius: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.2px;
+}
+
+.topbar-subtitle {
+  font-size: 10px;
+  color: var(--text-hint);
+}
+
+.lock-out-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--text-hint);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+.lock-out-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* ── CARDS ── */
+.cards {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  padding: 0 2px;
+}
+
+.app-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.app-card:active { opacity: 0.8; transform: scale(0.99); }
+
+.app-card.orange:hover { border-color: var(--orange); background: var(--orange-dim); }
+.app-card.blue:hover   { border-color: var(--blue);   background: var(--blue-dim); }
+.app-card.green:hover  { border-color: var(--green);  background: var(--green-dim); }
+
+.app-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.icon-orange { background: var(--orange-dim); }
+.icon-blue   { background: var(--blue-dim); }
+.icon-green  { background: var(--green-dim); }
+
+.app-card-body { flex: 1; min-width: 0; }
+.app-card-title { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: -0.2px; }
+.app-card-desc  { font-size: 11px; color: var(--text-sub); margin-top: 2px; line-height: 1.4; }
+.app-card-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  margin-top: 5px;
+  display: inline-block;
+}
+.badge-orange { background: var(--orange-dim); color: var(--orange); }
+.badge-blue   { background: var(--blue-dim);   color: var(--blue); }
+
+.app-card-arrow { font-size: 18px; color: var(--text-hint); flex-shrink: 0; }
+
+/* Private badge */
+.private-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-hint);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 9px;
+  margin-left: 8px;
+}
+
+.version-note {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-hint);
+  padding: 16px 0 4px;
+  opacity: 0.5;
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOCK SCREEN ── -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-logo">
+      <div class="lock-logo-mark">ST</div>
+      <div class="lock-title">Steak Teppei Tools</div>
+      <div class="lock-sub">Makai Market · Ala Moana Center</div>
+    </div>
+
+    <div class="lock-field">
+      <input
+        class="lock-input"
+        type="password"
+        id="pwInput"
+        placeholder="Enter password"
+        autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')unlock()"
+      >
+      <button class="eye-btn" id="eyeBtn" onclick="toggleEye()" tabindex="-1">👁</button>
+    </div>
+
+    <label class="lock-remember">
+      <input type="checkbox" id="rememberMe" checked>
+      <span>Keep me logged in for 30 days</span>
+    </label>
+
+    <button class="lock-btn" onclick="unlock()">Unlock →</button>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<!-- ── MAIN SCREEN ── -->
+<div class="main-screen" id="mainScreen">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-mark">ST</div>
+      <div>
+        <div class="topbar-title">Steak Teppei Tools</div>
+        <div class="topbar-subtitle">Makai Market · Ala Moana Center</div>
+      </div>
+    </div>
+    <button class="lock-out-btn" onclick="lockOut()">🔒 Lock</button>
+  </div>
+
+  <div class="cards">
+
+    <div class="section-label">Operations</div>
+
+    <a class="app-card orange" href="./index.html">
+      <div class="app-card-icon icon-orange">📋</div>
+      <div class="app-card-body">
+        <div class="app-card-title">Order App</div>
+        <div class="app-card-desc">Supplier orders · Delivery dates · Send via Email / LINE / SMS</div>
+        <div class="app-card-badge badge-orange">All Staff</div>
+      </div>
+      <div class="app-card-arrow">›</div>
+    </a>
+
+    <a class="app-card blue" href="./sales.html">
+      <div class="app-card-icon icon-blue">📊</div>
+      <div class="app-card-body">
+        <div class="app-card-title">Sales Data</div>
+        <div class="app-card-desc">Revenue · Orders · Busy periods · Year-over-year</div>
+        <div class="app-card-badge badge-blue">All Staff</div>
+      </div>
+      <div class="app-card-arrow">›</div>
+    </a>
+
+    <div class="section-label" style="margin-top:8px;">
+      Management
+      <span class="private-badge">🔒 Private</span>
+    </div>
+
+    <a class="app-card green" href="./payroll.html">
+      <div class="app-card-icon icon-green">💰</div>
+      <div class="app-card-body">
+        <div class="app-card-title">Payroll</div>
+        <div class="app-card-desc">Homebase CSV → Tip distribution → Copy to QuickBooks Payroll</div>
+      </div>
+      <div class="app-card-arrow">›</div>
+    </a>
+
+    <div class="version-note">Last updated: April 10, 2026</div>
+  </div>
+</div>
+
+<script>
+// ★ パスワードをここで設定（SHA-256ハッシュ値）
+// 現在のパスワード: teppei2026
+// 変更する場合は下記ツールでハッシュを生成: https://emn178.github.io/online-tools/sha256.html
+var PW_HASH = 'a8d4f2e7c1b9563e0f4a2d8c7b5e3f1a9d6c4b2e8f0a3d7c5b9e1f4a2d8c6b3';
+
+// ★ 実際のパスワードのハッシュ値を起動時に自動生成
+async function getHash(str) {
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// セッションキー
+var SESSION_KEY = 'st_tools_auth';
+var SESSION_DAYS = 30;
+
+function checkSession() {
+  try {
+    var raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return false;
+    var s = JSON.parse(raw);
+    if (!s.expiry || Date.now() > s.expiry) {
+      localStorage.removeItem(SESSION_KEY);
+      return false;
+    }
+    return s.ok === true;
+  } catch(e) { return false; }
+}
+
+function saveSession() {
+  var days = document.getElementById('rememberMe').checked ? SESSION_DAYS : 0;
+  var expiry = days > 0 ? Date.now() + days * 86400000 : Date.now() + 3600000; // 0日なら1時間
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ ok: true, expiry: expiry }));
+}
+
+function unlock() {
+  var pw = document.getElementById('pwInput').value;
+  if (!pw) return;
+
+  getHash(pw).then(function(hash) {
+    if (hash === PW_HASH) {
+      saveSession();
+      showMain();
+    } else {
+      var inp = document.getElementById('pwInput');
+      var err = document.getElementById('lockError');
+      inp.classList.add('error');
+      err.textContent = 'Incorrect password';
+      setTimeout(function() {
+        inp.classList.remove('error');
+        err.textContent = '';
+      }, 1500);
+      inp.value = '';
+      inp.focus();
+    }
+  });
+}
+
+function showMain() {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = '';
+}
+
+function lockOut() {
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('lockScreen').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('lockError').textContent = '';
+}
+
+function toggleEye() {
+  var inp = document.getElementById('pwInput');
+  var btn = document.getElementById('eyeBtn');
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+// ── 初期化 ──
+// 正しいパスワードのハッシュを起動時にセット
+// ★ パスワードを変えたい場合: CURRENT_PW の値を変えるだけでOK
+var CURRENT_PW = 'teppei2026';
+getHash(CURRENT_PW).then(function(h) { PW_HASH = h; });
+
+if (checkSession()) {
+  showMain();
+} else {
+  document.getElementById('pwInput').focus();
+}
+</script>
+</body>
+</html>

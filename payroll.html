@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steak Teppei — Payroll</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0f1117;
+  --surface: #171b24;
+  --surface2: #1e2330;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text-sub: #8892a4;
+  --text-hint: #4a5568;
+  --orange: #f97316;
+  --orange-dim: rgba(249,115,22,0.15);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.12);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --yellow: #eab308;
+  --yellow-dim: rgba(234,179,8,0.12);
+  --red: #ef4444;
+  --copied: #22c55e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--orange);
+  letter-spacing: 0.04em;
+}
+
+.topbar-period {
+  font-size: 11px;
+  color: var(--text-sub);
+  background: var(--surface2);
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  overflow: hidden;
+}
+
+/* ── LEFT PANEL ── */
+.left-panel {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.left-panel::-webkit-scrollbar { width: 4px; }
+.left-panel::-webkit-scrollbar-track { background: transparent; }
+.left-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.panel-section {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.panel-section-header {
+  padding: 8px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+
+.panel-section-body {
+  padding: 12px;
+}
+
+/* Upload zone */
+.upload-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: 6px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--orange);
+  background: var(--orange-dim);
+}
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 20px; margin-bottom: 6px; }
+.upload-text { font-size: 11px; color: var(--text-sub); }
+.upload-text strong { color: var(--orange); }
+.upload-success {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--green-dim);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 500;
+}
+.upload-success.show { display: flex; }
+
+/* Form fields */
+.field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.field-row:last-child { margin-bottom: 0; }
+.field-label {
+  font-size: 10px;
+  color: var(--text-hint);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.field-input {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 7px 10px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.field-input:focus { border-color: var(--orange); }
+.field-input.tips-input {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--yellow);
+}
+
+.field-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Calc button */
+.calc-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.calc-btn:hover { opacity: 0.9; }
+.calc-btn:disabled { background: var(--surface2); color: var(--text-hint); cursor: not-allowed; }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.stat-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.stat-label { font-size: 9px; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+.stat-val { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+.stat-val.orange { color: var(--orange); }
+.stat-val.yellow { color: var(--yellow); }
+
+/* Save / History */
+.save-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.save-btn:hover { background: rgba(34,197,94,0.2); }
+.save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.history-list { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: border-color 0.1s;
+}
+.history-item:hover { border-color: var(--orange); }
+.history-period { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+.history-tips { font-size: 10px; color: var(--yellow); }
+.history-delete {
+  background: none; border: none; color: var(--text-hint);
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px;
+  transition: color 0.1s;
+}
+.history-delete:hover { color: var(--red); }
+.history-empty { font-size: 11px; color: var(--text-hint); text-align: center; padding: 10px 0; }
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+  overflow-y: auto;
+  padding: 14px 16px;
+  background: var(--bg);
+}
+.right-panel::-webkit-scrollbar { width: 4px; }
+.right-panel::-webkit-scrollbar-track { background: transparent; }
+.right-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 10px;
+  color: var(--text-hint);
+}
+.empty-state-icon { font-size: 36px; opacity: 0.4; }
+.empty-state-text { font-size: 13px; }
+
+/* Employee table */
+.emp-table-wrap { display: flex; flex-direction: column; gap: 6px; }
+
+.emp-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 10px;
+  align-items: center;
+  transition: border-color 0.15s;
+}
+.emp-row.all-copied {
+  border-color: rgba(34,197,94,0.4);
+  background: rgba(34,197,94,0.04);
+}
+
+.emp-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.emp-role { font-size: 10px; color: var(--text-hint); margin-top: 1px; }
+
+.copy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.copy-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.copy-item:hover { border-color: var(--blue); background: var(--blue-dim); }
+.copy-item.copied {
+  border-color: var(--green);
+  background: var(--green-dim);
+  animation: copyFlash 0.3s ease;
+}
+@keyframes copyFlash {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+.copy-item-label {
+  font-size: 9px;
+  color: var(--text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+.copy-item-val {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text);
+}
+.copy-item.copied .copy-item-val { color: var(--green); }
+.copy-item-val.tips { color: var(--yellow); }
+.copy-item.copied .copy-item-val.tips { color: var(--green); }
+.copy-item-val.zero { color: var(--text-hint); }
+
+.copy-icon {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--text-hint);
+  transition: opacity 0.15s;
+}
+.copy-item:hover .copy-icon { color: var(--blue); }
+.copy-item.copied .copy-icon { color: var(--green); }
+
+.check-icon {
+  display: none;
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--green);
+}
+.copy-item.copied .check-icon { display: block; }
+.copy-item.copied .copy-icon { display: none; }
+
+/* Section header in right panel */
+.right-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.right-header-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.progress-bar {
+  width: 120px;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.progress-text { font-size: 10px; color: var(--text-hint); font-family: 'JetBrains Mono', monospace; }
+
+/* Reset copied btn */
+.reset-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 10px;
+  color: var(--text-hint);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.reset-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* Totals row */
+.totals-row {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  gap: 24px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.total-item { display: flex; flex-direction: column; gap: 2px; }
+.total-label { font-size: 9px; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.06em; }
+.total-val { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+.total-val.orange { color: var(--orange); }
+.total-val.yellow { color: var(--yellow); }
+.total-val.green { color: var(--green); }
+
+/* Topbar status */
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-hint);
+}
+.status-dot.ready { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-label { font-size: 11px; color: var(--text-sub); }
+
+/* Excel download btn */
+.excel-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--blue-dim);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: 5px;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.excel-btn:hover { background: rgba(59,130,246,0.2); }
+.excel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-title">ST PAYROLL</div>
+    <div class="topbar-period" id="topPeriod">— No period loaded —</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-label" id="statusLabel">Load CSV to start</span>
+    </div>
+    <div class="topbar-right">
+      <button class="excel-btn" id="excelBtn" disabled onclick="downloadExcel()">⬇ Excel</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+
+      <!-- 1. CSV Upload -->
+      <div class="panel-section">
+        <div class="panel-section-header">① Homebase CSV</div>
+        <div class="panel-section-body">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(this)">
+            <div class="upload-icon">📂</div>
+            <div class="upload-text"><strong>Click or drag</strong> Homebase timesheet CSV</div>
+          </div>
+          <div class="upload-success" id="uploadSuccess">
+            <span>✓</span>
+            <span id="uploadSuccessText"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Period & Tips -->
+      <div class="panel-section">
+        <div class="panel-section-header">② Period & Tips</div>
+        <div class="panel-section-body">
+          <div class="field-row-2col">
+            <div class="field-row" style="margin:0;">
+              <div class="field-label">From</div>
+              <input class="field-input" type="date" id="fromDate">
+            </div>
+            <div class="field-row" style="margin:0;">
+              <div class="field-label">To</div>
+              <input class="field-input" type="date" id="toDate">
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:8px;">
+            <div class="field-label">Pay Date</div>
+            <input class="field-input" type="date" id="payDate">
+          </div>
+          <div class="field-row">
+            <div class="field-label">Total Tips (Clover) $</div>
+            <input class="field-input tips-input" type="number" id="tipsTotal" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <button class="calc-btn" id="calcBtn" onclick="calculate()" disabled>Calculate →</button>
+        </div>
+      </div>
+
+      <!-- 3. Summary -->
+      <div class="panel-section" id="summarySection" style="display:none;">
+        <div class="panel-section-header">③ Summary</div>
+        <div class="panel-section-body">
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-label">Total Hours</div>
+              <div class="stat-val orange" id="statHours">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Tips/Hour</div>
+              <div class="stat-val yellow" id="statRate">—</div>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-card">
+              <div class="stat-label">Employees</div>
+              <div class="stat-val" id="statEmps">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total Tips</div>
+              <div class="stat-val yellow" id="statTips">—</div>
+            </div>
+          </div>
+          <button class="save-btn" id="saveBtn" onclick="saveRecord()" disabled>💾 Save Payroll Record</button>
+        </div>
+      </div>
+
+      <!-- 4. History -->
+      <div class="panel-section">
+        <div class="panel-section-header">History</div>
+        <div class="panel-section-body" style="padding:10px;">
+          <div class="history-list" id="historyList"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel" id="rightPanel">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">Load CSV and calculate to see payroll data</div>
+      </div>
+      <div id="tableWrap" style="display:none;">
+        <div class="right-header">
+          <div class="right-header-title">Copy to QuickBooks Payroll</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="progress-bar-wrap">
+              <div class="progress-bar"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+              <div class="progress-text" id="progressText">0 / 0</div>
+            </div>
+            <button class="reset-btn" onclick="resetCopied()">Reset</button>
+          </div>
+        </div>
+        <div class="emp-table-wrap" id="empTable"></div>
+        <div class="totals-row" id="totalsRow"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+var csvData = null;
+var calcResult = null;
+var copiedState = {}; // empKey -> { reg, ot, tips }
+
+// ── EMPLOYEE CONFIG ──
+var EMP_CONFIG = {
+  'kacee':    { display: 'Kacee A. Takafuji',  fixedHours: 100,  skipOT: false },
+  'qiongmei': { display: 'Qiongmei He',         fixedHours: null, skipOT: false },
+  'shaine':   { display: 'Shaine Tamamoto',     fixedHours: null, skipOT: false, isSalaried: true },
+  'shouling': { display: 'Shouling Xue',         fixedHours: null, skipOT: false },
+  'xingyu':   { display: 'Xingyu Wang',          fixedHours: null, skipOT: false },
+  'yoshimi':  { display: 'Yoshimi Kagehiro',     fixedHours: null, skipOT: false },
+  'yu':       { display: 'Yu Minghua',           fixedHours: null, skipOT: false },
+  'zhu':      { display: 'Zhu He',               fixedHours: null, skipOT: false },
+  'kai':      { display: 'Kai Shuto',            fixedHours: null, skipOT: false },
+  'david':    { display: 'David Akihiro Nako',   skip: true }
+};
+
+function empKey(first, last) {
+  return (first || '').toLowerCase().trim();
+}
+
+// ── CSV PARSE ──
+function handleCSV(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    parseCSV(e.target.result, file.name);
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text, filename) {
+  var lines = text.trim().split('\n');
+  // Find header row
+  var headerIdx = -1;
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].toLowerCase().includes('first name')) { headerIdx = i; break; }
+  }
+  if (headerIdx < 0) { alert('Could not find header row in CSV'); return; }
+
+  // Parse period from line 1
+  var periodLine = lines[1] || '';
+  var periodMatch = periodLine.match(/(\d{2}\/\d{2}\/\d{4})\s+To\s+(\d{2}\/\d{2}\/\d{4})/i);
+  var fromStr = '', toStr = '';
+  if (periodMatch) {
+    fromStr = isoDate(periodMatch[1]);
+    toStr   = isoDate(periodMatch[2]);
+  }
+
+  var headers = parseCSVRow(lines[headerIdx]);
+  var colFirst = headers.findIndex(h => h.toLowerCase().includes('first'));
+  var colLast  = headers.findIndex(h => h.toLowerCase().includes('last'));
+  var colReg   = headers.findIndex(h => h.toLowerCase().includes('regular'));
+  var colOT    = headers.findIndex(h => h.toLowerCase().includes('ot'));
+
+  var empMap = {}; // key -> { reg, ot }
+
+  for (var i = headerIdx + 1; i < lines.length; i++) {
+    var cols = parseCSVRow(lines[i]);
+    var first = (cols[colFirst] || '').trim();
+    var last  = (cols[colLast]  || '').trim();
+    var reg   = parseFloat(cols[colReg]  || 0) || 0;
+    var ot    = parseFloat(cols[colOT]   || 0) || 0;
+
+    if (!first && !last) continue;
+    if (first.toLowerCase() === 'total') continue;
+
+    var key = empKey(first, last);
+    var cfg = EMP_CONFIG[key];
+    if (cfg && cfg.skip) continue;
+
+    if (!empMap[key]) {
+      empMap[key] = { first: first, last: last, reg: 0, ot: 0, key: key };
+    }
+    empMap[key].reg += reg;
+    empMap[key].ot  += ot;
+  }
+
+  csvData = { empMap: empMap, fromStr: fromStr, toStr: toStr };
+
+  // Autofill dates
+  if (fromStr) document.getElementById('fromDate').value = fromStr;
+  if (toStr)   document.getElementById('toDate').value   = toStr;
+
+  // Show success
+  document.getElementById('uploadZone').style.display = 'none';
+  var succ = document.getElementById('uploadSuccess');
+  succ.classList.add('show');
+  document.getElementById('uploadSuccessText').textContent = filename + ' loaded (' + Object.keys(empMap).length + ' employees)';
+
+  // Enable calc button if tips filled
+  checkCalcReady();
+  setStatus('CSV loaded — enter tips and calculate', false);
+}
+
+function isoDate(mmddyyyy) {
+  var p = mmddyyyy.split('/');
+  return p[2] + '-' + p[0] + '-' + p[1];
+}
+
+function parseCSVRow(line) {
+  var result = [], cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+    else { cur += c; }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+// ── CALC ──
+function checkCalcReady() {
+  var tips = parseFloat(document.getElementById('tipsTotal').value) || 0;
+  var ready = csvData && tips > 0;
+  document.getElementById('calcBtn').disabled = !ready;
+}
+document.getElementById('tipsTotal').addEventListener('input', checkCalcReady);
+
+function calculate() {
+  if (!csvData) return;
+  var tips = parseFloat(document.getElementById('tipsTotal').value) || 0;
+  var empMap = csvData.empMap;
+
+  // Build employee list in fixed order
+  var ORDER = ['kacee','qiongmei','shaine','shouling','xingyu','yoshimi','yu','zhu','kai'];
+  var employees = [];
+
+  ORDER.forEach(function(key) {
+    var cfg = EMP_CONFIG[key];
+    if (!cfg || cfg.skip) return;
+    var e = empMap[key] || { first: cfg.display.split(' ')[0], last: '', reg: 0, ot: 0, key: key };
+
+    // Apply fixed hours
+    var tipHours;
+    if (cfg.fixedHours) {
+      tipHours = cfg.fixedHours;
+    } else {
+      tipHours = e.reg + e.ot;
+    }
+
+    employees.push({
+      key: key,
+      display: cfg.display,
+      reg: e.reg,
+      ot: e.ot,
+      tipHours: tipHours,
+      isSalaried: cfg.isSalaried || false
+    });
+  });
+
+  // Total tip hours
+  var totalTipHours = employees.reduce(function(s, e) { return s + e.tipHours; }, 0);
+  var tipRate = totalTipHours > 0 ? tips / totalTipHours : 0;
+
+  // Assign tips
+  var distributed = 0;
+  employees.forEach(function(e, i) {
+    if (i < employees.length - 1) {
+      e.tips = Math.round(e.tipHours * tipRate * 100) / 100;
+      distributed += e.tips;
+    } else {
+      // Last employee gets remainder to avoid rounding error
+      e.tips = Math.round((tips - distributed) * 100) / 100;
+    }
+  });
+
+  calcResult = {
+    employees: employees,
+    totalTipHours: totalTipHours,
+    tipRate: tipRate,
+    tipsTotal: tips,
+    from: document.getElementById('fromDate').value,
+    to: document.getElementById('toDate').value,
+    payDate: document.getElementById('payDate').value
+  };
+
+  copiedState = {};
+  renderTable();
+  renderSummary();
+  updateTopbar();
+  document.getElementById('excelBtn').disabled = false;
+  document.getElementById('saveBtn').disabled = false;
+  setStatus('Ready — copy to QuickBooks', true);
+}
+
+function renderSummary() {
+  var r = calcResult;
+  document.getElementById('statHours').textContent = r.totalTipHours.toFixed(2) + 'h';
+  document.getElementById('statRate').textContent  = '$' + r.tipRate.toFixed(4);
+  document.getElementById('statEmps').textContent  = r.employees.filter(function(e){ return e.tipHours > 0; }).length;
+  document.getElementById('statTips').textContent  = '$' + r.tipsTotal.toFixed(2);
+  document.getElementById('summarySection').style.display = '';
+}
+
+function updateTopbar() {
+  var r = calcResult;
+  if (r.from && r.to) {
+    document.getElementById('topPeriod').textContent = fmtDateShort(r.from) + ' – ' + fmtDateShort(r.to);
+  }
+}
+
+function fmtDateShort(iso) {
+  if (!iso) return '';
+  var p = iso.split('-');
+  return p[1] + '/' + p[2] + '/' + p[0];
+}
+
+function renderTable() {
+  var emps = calcResult.employees;
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('tableWrap').style.display = '';
+
+  var html = '';
+  emps.forEach(function(e) {
+    var hasOT = e.ot > 0;
+    var regVal = e.key === 'kacee' ? '100' : e.reg.toFixed(2);
+    var otVal  = e.ot > 0 ? e.ot.toFixed(2) : '0';
+    var tipVal = '$' + e.tips.toFixed(2);
+
+    html += '<div class="emp-row" id="row-' + e.key + '">';
+    html += '<div>';
+    html += '<div class="emp-name">' + e.display + '</div>';
+    if (e.isSalaried) {
+      html += '<div class="emp-role" style="color:var(--blue);">Salaried — tip hours only</div>';
+    } else if (e.key === 'kacee') {
+      html += '<div class="emp-role" style="color:var(--orange);">Fixed 100h for tips</div>';
+    } else if (e.tipHours === 0) {
+      html += '<div class="emp-role">No hours this period</div>';
+    }
+    html += '</div>';
+
+    html += '<div class="copy-grid">';
+
+    // Regular hours
+    html += '<div class="copy-item' + (e.reg === 0 && e.key !== 'kacee' ? ' zero-item' : '') + '" id="ci-' + e.key + '-reg" onclick="copyVal(this,\'' + e.key + '\',\'reg\',\'' + regVal + '\')">';
+    html += '<div class="copy-item-label">Regular Hrs</div>';
+    html += '<div class="copy-item-val' + (e.reg === 0 && e.key !== 'kacee' ? ' zero' : '') + '">' + regVal + '</div>';
+    html += '<span class="copy-icon">⧉</span><span class="check-icon">✓</span>';
+    html += '</div>';
+
+    // OT hours
+    html += '<div class="copy-item" id="ci-' + e.key + '-ot" onclick="copyVal(this,\'' + e.key + '\',\'ot\',\'' + otVal + '\')">';
+    html += '<div class="copy-item-label">OT Hrs</div>';
+    html += '<div class="copy-item-val' + (e.ot === 0 ? ' zero' : '') + '">' + otVal + '</div>';
+    html += '<span class="copy-icon">⧉</span><span class="check-icon">✓</span>';
+    html += '</div>';
+
+    // Tips
+    html += '<div class="copy-item" id="ci-' + e.key + '-tips" onclick="copyVal(this,\'' + e.key + '\',\'tips\',\'' + e.tips.toFixed(2) + '\')">';
+    html += '<div class="copy-item-label">Paycheck Tips</div>';
+    html += '<div class="copy-item-val tips">' + tipVal + '</div>';
+    html += '<span class="copy-icon">⧉</span><span class="check-icon">✓</span>';
+    html += '</div>';
+
+    html += '</div>'; // copy-grid
+    html += '</div>'; // emp-row
+  });
+
+  document.getElementById('empTable').innerHTML = html;
+
+  // Totals
+  var totalReg = calcResult.employees.reduce(function(s, e) {
+    return s + (e.key === 'kacee' ? 100 : e.reg);
+  }, 0);
+  var totalOT  = calcResult.employees.reduce(function(s, e) { return s + e.ot; }, 0);
+  var totalTips = calcResult.employees.reduce(function(s, e) { return s + e.tips; }, 0);
+  var totalH   = calcResult.totalTipHours;
+
+  document.getElementById('totalsRow').innerHTML =
+    '<div class="total-item"><div class="total-label">Tip Pool Hours</div><div class="total-val orange">' + totalH.toFixed(2) + 'h</div></div>' +
+    '<div class="total-item"><div class="total-label">Total Reg Hrs</div><div class="total-val">' + totalReg.toFixed(2) + 'h</div></div>' +
+    '<div class="total-item"><div class="total-label">Total OT Hrs</div><div class="total-val">' + totalOT.toFixed(2) + 'h</div></div>' +
+    '<div class="total-item"><div class="total-label">Tips Distributed</div><div class="total-val yellow">$' + totalTips.toFixed(2) + '</div></div>';
+
+  updateProgress();
+}
+
+// ── COPY ──
+function copyVal(el, key, field, val) {
+  navigator.clipboard.writeText(val).then(function() {
+    el.classList.add('copied');
+
+    if (!copiedState[key]) copiedState[key] = {};
+    copiedState[key][field] = true;
+
+    // Check if all 3 copied for this employee
+    var s = copiedState[key];
+    if (s.reg && s.ot && s.tips) {
+      var row = document.getElementById('row-' + key);
+      if (row) row.classList.add('all-copied');
+    }
+
+    updateProgress();
+  }).catch(function() {
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = val;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    el.classList.add('copied');
+    if (!copiedState[key]) copiedState[key] = {};
+    copiedState[key][field] = true;
+    updateProgress();
+  });
+}
+
+function resetCopied() {
+  copiedState = {};
+  document.querySelectorAll('.copy-item').forEach(function(el) { el.classList.remove('copied'); });
+  document.querySelectorAll('.emp-row').forEach(function(el) { el.classList.remove('all-copied'); });
+  updateProgress();
+}
+
+function updateProgress() {
+  if (!calcResult) return;
+  var emps = calcResult.employees.filter(function(e) { return e.tipHours > 0; });
+  var done = emps.filter(function(e) {
+    var s = copiedState[e.key] || {};
+    return s.reg && s.ot && s.tips;
+  }).length;
+  var pct = emps.length > 0 ? (done / emps.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = done + ' / ' + emps.length;
+}
+
+// ── SAVE HISTORY ──
+// ── GOOGLE SHEETS CONFIG ──
+// ★ Apps Script Web App URL をここに貼り付ける（セットアップ後）
+var GAS_URL = '';  // 例: 'https://script.google.com/macros/s/XXXXX/exec'
+
+// GAS_URLが未設定か確認
+function gasReady() { return GAS_URL && GAS_URL.length > 10; }
+
+// ── SAVE TO GOOGLE SHEETS ──
+function saveRecord() {
+  if (!calcResult) return;
+
+  if (!gasReady()) {
+    // GAS未設定 → localStorageにフォールバック＋警告
+    saveLocalFallback();
+    showGasWarning();
+    return;
+  }
+
+  var btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+
+  var rec = buildRecord();
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action: 'save', record: rec })
+  }).then(function() {
+    // no-corsではレスポンス本文が読めないので成功扱い
+    saveLocalFallback(rec); // ローカルにもキャッシュ
+    btn.disabled = false;
+    btn.textContent = '✓ Saved to Sheets!';
+    setTimeout(function() { btn.textContent = '💾 Save Payroll Record'; btn.disabled = false; }, 2500);
+    renderHistory();
+  }).catch(function(err) {
+    btn.disabled = false;
+    btn.textContent = '⚠ Save failed';
+    setTimeout(function() { btn.textContent = '💾 Save Payroll Record'; }, 2500);
+    alert('Save failed: ' + err.message);
+  });
+}
+
+function buildRecord() {
+  return {
+    id: Date.now(),
+    savedAt: new Date().toISOString(),
+    from: calcResult.from,
+    to: calcResult.to,
+    payDate: calcResult.payDate,
+    tipsTotal: calcResult.tipsTotal,
+    totalHours: calcResult.totalTipHours,
+    tipRate: calcResult.tipRate,
+    employees: calcResult.employees.map(function(e) {
+      return {
+        key: e.key,
+        display: e.display,
+        reg: e.reg,
+        ot: e.ot,
+        tipHours: e.tipHours,
+        tips: e.tips
+      };
+    })
+  };
+}
+
+function saveLocalFallback(rec) {
+  rec = rec || buildRecord();
+  var records = getLocalHistory();
+  var exists = records.findIndex(function(r) { return r.from === rec.from && r.to === rec.to; });
+  if (exists >= 0) records[exists] = rec;
+  else records.unshift(rec);
+  try { localStorage.setItem('st_payroll_history', JSON.stringify(records)); } catch(e) {}
+  renderHistory();
+}
+
+function getLocalHistory() {
+  try { return JSON.parse(localStorage.getItem('st_payroll_history') || '[]'); } catch(e) { return []; }
+}
+
+// ── LOAD HISTORY FROM SHEETS ──
+function loadHistoryFromSheets() {
+  if (!gasReady()) { renderHistory(); return; }
+  var el = document.getElementById('historyList');
+  el.innerHTML = '<div class="history-empty">⏳ Loading...</div>';
+
+  fetch(GAS_URL + '?action=list')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.records) {
+        // Sheets側のデータをローカルにマージ
+        try { localStorage.setItem('st_payroll_history', JSON.stringify(data.records)); } catch(e) {}
+      }
+      renderHistory();
+    })
+    .catch(function() { renderHistory(); }); // 失敗時はローカルで表示
+}
+
+function renderHistory() {
+  var records = getLocalHistory();
+  var el = document.getElementById('historyList');
+  if (!records.length) {
+    el.innerHTML = '<div class="history-empty">No records saved yet</div>';
+    return;
+  }
+  el.innerHTML = records.map(function(r) {
+    var label = (r.from ? fmtDateShort(r.from) : '?') + ' – ' + (r.to ? fmtDateShort(r.to) : '?');
+    return '<div class="history-item" onclick="loadRecord(' + r.id + ')">' +
+      '<div>' +
+        '<div class="history-period">' + label + '</div>' +
+        (r.payDate ? '<div style="font-size:9px;color:var(--text-hint);">Pay: ' + fmtDateShort(r.payDate) + '</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:4px;">' +
+        '<div class="history-tips">$' + (r.tipsTotal||0).toFixed(2) + '</div>' +
+        '<button class="history-delete" onclick="event.stopPropagation();deleteRecord(' + r.id + ')">×</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function loadRecord(id) {
+  var records = getLocalHistory();
+  var rec = records.find(function(r) { return r.id === id; });
+  if (!rec) return;
+
+  document.getElementById('fromDate').value  = rec.from || '';
+  document.getElementById('toDate').value    = rec.to   || '';
+  document.getElementById('payDate').value   = rec.payDate || '';
+  document.getElementById('tipsTotal').value = rec.tipsTotal || '';
+
+  calcResult = {
+    employees: rec.employees,
+    totalTipHours: rec.totalHours,
+    tipRate: rec.totalHours > 0 ? rec.tipsTotal / rec.totalHours : 0,
+    tipsTotal: rec.tipsTotal,
+    from: rec.from,
+    to: rec.to,
+    payDate: rec.payDate
+  };
+
+  copiedState = {};
+  renderTable();
+  renderSummary();
+  updateTopbar();
+  document.getElementById('excelBtn').disabled = false;
+  document.getElementById('saveBtn').disabled = false;
+  setStatus('Record loaded — copy to QuickBooks', true);
+}
+
+function deleteRecord(id) {
+  if (!confirm('Delete this record?')) return;
+  var records = getLocalHistory().filter(function(r) { return r.id !== id; });
+  try { localStorage.setItem('st_payroll_history', JSON.stringify(records)); } catch(e) {}
+
+  // Sheetsからも削除
+  if (gasReady()) {
+    fetch(GAS_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'delete', id: id })
+    }).catch(function(){});
+  }
+  renderHistory();
+}
+
+// GAS未設定時の警告バナー
+function showGasWarning() {
+  var warn = document.getElementById('gasWarning');
+  if (warn) { warn.style.display = ''; return; }
+  var el = document.createElement('div');
+  el.id = 'gasWarning';
+  el.style.cssText = 'background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.4);border-radius:6px;padding:8px 10px;font-size:11px;color:#eab308;margin-top:8px;';
+  el.innerHTML = '⚠ Google Sheetsが未設定です。<br>セットアップ手順を確認してGAS_URLを設定してください。<br><span style="color:var(--text-hint);">現在はブラウザにローカル保存されています。</span>';
+  document.querySelector('#summarySection .panel-section-body').appendChild(el);
+}
+
+function setStatus(msg, ready) {
+  document.getElementById('statusLabel').textContent = msg;
+  var dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (ready ? ' ready' : '');
+}
+
+// ── EXCEL DOWNLOAD ──
+function downloadExcel() {
+  if (!calcResult) return;
+  // Build CSV with same layout as Teppei Excel
+  var r = calcResult;
+  var rows = [];
+  rows.push(['Payroll Report（給与レポート）']);
+  rows.push(['Company Name', 'Teppei USA, Inc.']);
+  rows.push(['DBA', 'Steak Teppei']);
+  rows.push(['From', fmtDateShort(r.from)]);
+  rows.push(['To',   fmtDateShort(r.to)]);
+  rows.push(['Pay Date', fmtDateShort(r.payDate)]);
+  rows.push([]);
+  rows.push([null, null, '固定給', '時給', '労働時間', '小計', '残業時給', '残業時間', '残業合計', '時間合計', '給与合計', 'チップ', '総計']);
+  rows.push(['Employee Name', null, 'Salary', 'Regular Time', null, null, 'Over Time Pay', null, null, 'Payroll Total', null, 'Payroll Tips', 'Grand Total($)']);
+  rows.push(['First Name', 'Last Name', 'Amount($)', 'Rate($)', 'Hour(H)', 'Sub Total', 'Rate($)', 'Hour(H)', 'Sub Total', 'Total(H)', 'Total($)', null, null]);
+
+  r.employees.forEach(function(e) {
+    var nameParts = e.display.split(' ');
+    var first = nameParts[0];
+    var last  = nameParts.slice(1).join(' ');
+    var regH  = e.key === 'kacee' ? 100 : e.reg;
+    var otH   = e.ot || null;
+    rows.push([first, last, null, null, regH, null, null, otH, null, e.tipHours, null, e.tips.toFixed(2), null]);
+  });
+
+  // Totals
+  rows.push(['Total', null, null, null, null, null, null, null, null, r.totalTipHours.toFixed(2), null, r.tipsTotal.toFixed(2), null]);
+  rows.push([]);
+  rows.push([null, null, null, null, null, null, null, null, null, null, null, r.tipsTotal]);
+  // Footer
+  for (var i = 0; i < 8; i++) rows.push([]);
+  rows.push(['【送付先】']);
+  rows.push(['ご不明な点がございましたら、お気軽に、ご連絡くださいませ。']);
+  rows.push(['Two Miles 浜野(ahamano@twomiles.net)']);
+
+  var csv = rows.map(function(row) {
+    return row.map(function(cell) {
+      if (cell === null || cell === undefined) return '';
+      var s = String(cell);
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) s = '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }).join(',');
+  }).join('\r\n');
+
+  var bom = '\uFEFF';
+  var blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  var period = (r.from || '').replace(/-/g,'').substring(2) + '-' + (r.to || '').replace(/-/g,'').substring(2);
+  a.download = period + '_Teppei_USA_Payroll_Report.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── DRAG & DROP ──
+var zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', function() { zone.classList.remove('drag-over'); });
+zone.addEventListener('drop', function(e) {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  var file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.csv')) {
+    var reader = new FileReader();
+    reader.onload = function(ev) { parseCSV(ev.target.result, file.name); };
+    reader.readAsText(file);
+  }
+});
+
+// ── INIT ──
+loadHistoryFromSheets();
+</script>
+</body>
+</html>
