@@ -124,6 +124,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
     <div class="topbar-right">
       <button class="whats-new-btn" onclick="openChangelog()">What's New</button>
       <button class="whats-new-btn" onclick="window.location.href='./version.html'" style="color:var(--text-hint);">History</button>
+      <button class="whats-new-btn" id="forceUpdateBtn" onclick="forceUpdate()" style="color:var(--text-hint);">↺ Update</button>
       <button class="lock-out-btn" onclick="lockOut()">🔒 Lock</button>
     </div>
   </div>
@@ -185,7 +186,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v1.5 · April 10, 2026 — View full version history ›</div>
+    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v1.6 · April 10, 2026 — View full version history ›</div>
   </div>
 </div>
 
@@ -203,10 +204,18 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION  = '1.5';
+var APP_VERSION  = '1.6';
 var APP_DATE     = 'April 10, 2026';
-var APP_DATETIME = '2026-04-10 13:20:55';
+var APP_DATETIME = 'PLACEHOLDER';
 var CHANGELOG = [
+  {
+    version: '1.6',
+    date: 'April 10, 2026',
+    items: [
+      '↺ Update button added to topbar',
+      'Force update clears all Service Worker caches and reloads latest version'
+    ]
+  },
   {
     version: '1.5',
     date: 'April 10, 2026',
@@ -326,6 +335,35 @@ function closeChangelog() {
 }
 function checkChangelog() {
   if (localStorage.getItem(CL_KEY) !== APP_VERSION) openChangelog();
+}
+
+// ── 強制更新 ──
+function forceUpdate() {
+  var btn = document.getElementById('forceUpdateBtn');
+  btn.textContent = '⏳...';
+  btn.disabled = true;
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(function(reg) {
+      if (reg) {
+        // 既存のSWキャッシュを全削除してリロード
+        reg.unregister().then(function() {
+          caches.keys().then(function(keys) {
+            return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+          }).then(function() {
+            window.location.reload(true);
+          });
+        });
+      } else {
+        caches.keys().then(function(keys) {
+          return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+        }).then(function() {
+          window.location.reload(true);
+        });
+      }
+    });
+  } else {
+    window.location.reload(true);
+  }
 }
 
 // ── Service Worker（強制更新）──
