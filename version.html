@@ -89,6 +89,58 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 var HISTORY = [
   // ── payroll.html ──
   {
+    file: 'payroll.html', type: 'payroll', version: '1.9',
+    datetime: '2026-04-10 14:50:00',
+    changes: [
+      'Calculate button bottom clipping fixed (padding-bottom added)',
+      'panel-section-body bottom padding increased to 10px'
+    ]
+  },
+  {
+    file: 'payroll.html', type: 'payroll', version: '1.8',
+    datetime: '2026-04-10 14:40:00',
+    changes: [
+      'GAS_URL updated to new deployment',
+      'Save changed from no-cors POST to GET — CORS resolved',
+      'Google Sheets save confirmed working',
+      'calc-btn padding reduced further'
+    ]
+  },
+  {
+    file: 'payroll.html', type: 'payroll', version: '1.7',
+    datetime: '2026-04-10 14:35:00',
+    changes: [
+      'Save uses GET request to avoid CORS issues',
+      'Delete record also updated to GET'
+    ]
+  },
+  // ── home.html ──
+  {
+    file: 'home.html', type: 'home', version: '1.7',
+    datetime: '2026-04-10 14:50:00',
+    changes: ['Version history synced with latest payroll updates']
+  },
+  {
+    file: 'home.html', type: 'home', version: '1.6',
+    datetime: '2026-04-10 14:20:00',
+    changes: [
+      '↺ Update button added to topbar',
+      'Force update clears all caches and reloads'
+    ]
+  },
+  // ── sw-home.js ──
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.7',
+    datetime: '2026-04-10 14:50:00',
+    changes: ['Cache version updated to st-home-v1.7']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '1.6',
+    datetime: '2026-04-10 14:20:00',
+    changes: ['Cache version updated to st-home-v1.6']
+  },
+  // ── payroll.html (continued) ──
+  {
     file: 'payroll.html', type: 'payroll', version: '1.6',
     datetime: '2026-04-10 14:30:00',
     changes: [
