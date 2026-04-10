@@ -409,20 +409,10 @@ html, body {
 </div>
 
 <script>
-// ★ パスワードをここで設定（SHA-256ハッシュ値）
-// 現在のパスワード: teppei2026
-// 変更する場合は下記ツールでハッシュを生成: https://emn178.github.io/online-tools/sha256.html
-var PW_HASH = 'a8d4f2e7c1b9563e0f4a2d8c7b5e3f1a9d6c4b2e8f0a3d7c5b9e1f4a2d8c6b3';
+// ★ パスワード設定 — 変更する場合はここだけ書き換える
+var CURRENT_PW = 'teppei2026';
 
-// ★ 実際のパスワードのハッシュ値を起動時に自動生成
-async function getHash(str) {
-  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-// セッションキー
 var SESSION_KEY = 'st_tools_auth';
-var SESSION_DAYS = 30;
 
 function checkSession() {
   try {
@@ -433,42 +423,39 @@ function checkSession() {
       localStorage.removeItem(SESSION_KEY);
       return false;
     }
-    return s.ok === true;
+    return s.pw === CURRENT_PW;
   } catch(e) { return false; }
 }
 
 function saveSession() {
-  var days = document.getElementById('rememberMe').checked ? SESSION_DAYS : 0;
-  var expiry = days > 0 ? Date.now() + days * 86400000 : Date.now() + 3600000; // 0日なら1時間
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ ok: true, expiry: expiry }));
+  var days = document.getElementById('rememberMe').checked ? 30 : 0;
+  var expiry = Date.now() + (days > 0 ? days * 86400000 : 3600000);
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ pw: CURRENT_PW, expiry: expiry }));
 }
 
 function unlock() {
   var pw = document.getElementById('pwInput').value;
   if (!pw) return;
-
-  getHash(pw).then(function(hash) {
-    if (hash === PW_HASH) {
-      saveSession();
-      showMain();
-    } else {
-      var inp = document.getElementById('pwInput');
-      var err = document.getElementById('lockError');
-      inp.classList.add('error');
-      err.textContent = 'Incorrect password';
-      setTimeout(function() {
-        inp.classList.remove('error');
-        err.textContent = '';
-      }, 1500);
-      inp.value = '';
-      inp.focus();
-    }
-  });
+  if (pw === CURRENT_PW) {
+    saveSession();
+    showMain();
+  } else {
+    var inp = document.getElementById('pwInput');
+    var err = document.getElementById('lockError');
+    inp.classList.add('error');
+    err.textContent = 'Incorrect password';
+    setTimeout(function() {
+      inp.classList.remove('error');
+      err.textContent = '';
+    }, 1500);
+    inp.value = '';
+    inp.focus();
+  }
 }
 
 function showMain() {
   document.getElementById('lockScreen').style.display = 'none';
-  document.getElementById('mainScreen').style.display = '';
+  document.getElementById('mainScreen').style.display = 'block';
 }
 
 function lockOut() {
@@ -486,19 +473,12 @@ function toggleEye() {
   else { inp.type = 'password'; btn.textContent = '👁'; }
 }
 
-// ── 初期化 ──
-// ★ パスワードを変えたい場合: CURRENT_PW の値を変えるだけでOK
-var CURRENT_PW = 'teppei2026';
-
-// ハッシュ生成完了後に初期化（順序保証）
-getHash(CURRENT_PW).then(function(h) {
-  PW_HASH = h;
-  if (checkSession()) {
-    showMain();
-  } else {
-    document.getElementById('pwInput').focus();
-  }
-});
+// ── 初期化（同期処理）──
+if (checkSession()) {
+  showMain();
+} else {
+  document.getElementById('pwInput').focus();
+}
 </script>
 </body>
 </html>
