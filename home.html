@@ -65,8 +65,16 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 .badge-blue{background:var(--blue-dim);color:var(--blue);}
 .app-card-arrow{font-size:18px;color:var(--text-hint);flex-shrink:0;}
 .private-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-hint);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 9px;margin-left:8px;}
-.version-note{text-align:center;font-size:10px;color:var(--text-hint);padding:16px 0 4px;opacity:.5;cursor:pointer;}
+.version-note{text-align:center;font-size:10px;color:var(--text-hint);padding:12px 0 4px;opacity:.5;cursor:pointer;}
 .version-note:hover{opacity:1;color:var(--orange);}
+.latest-banner{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s;}
+.latest-banner:hover{background:var(--surface2);}
+.latest-banner-dot{width:8px;height:8px;border-radius:50%;background:var(--orange);box-shadow:0 0 6px var(--orange);flex-shrink:0;}
+.latest-banner-label{font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;}
+.latest-banner-body{flex:1;min-width:0;}
+.latest-banner-ver{font-size:13px;font-weight:700;color:var(--text);font-family:'JetBrains Mono',monospace;}
+.latest-banner-dt{font-size:10px;color:var(--text-hint);margin-top:1px;font-family:'JetBrains Mono',monospace;}
+.latest-banner-arrow{font-size:14px;color:var(--text-hint);flex-shrink:0;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.open{display:flex;}
 .modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:22px 20px;width:100%;max-width:420px;max-height:80vh;overflow-y:auto;}
@@ -117,6 +125,16 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <button class="whats-new-btn" onclick="openChangelog()">What's New</button>
       <button class="lock-out-btn" onclick="lockOut()">🔒 Lock</button>
     </div>
+  </div>
+
+  <div class="latest-banner" onclick="openChangelog()">
+    <div class="latest-banner-dot"></div>
+    <div class="latest-banner-label">Latest Update</div>
+    <div class="latest-banner-body">
+      <div class="latest-banner-ver" id="bannerVersion"></div>
+      <div class="latest-banner-dt" id="bannerDatetime"></div>
+    </div>
+    <div class="latest-banner-arrow">›</div>
   </div>
 
   <div class="cards">
@@ -184,9 +202,18 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION = '1.0';
-var APP_DATE    = 'April 10, 2026';
+var APP_VERSION  = '1.1';
+var APP_DATE     = 'April 10, 2026';
+var APP_DATETIME = '2026-04-10 12:00:00'; // ★ 更新のたびに秒まで記録（YYYY-MM-DD HH:MM:SS）
 var CHANGELOG = [
+  {
+    version: '1.1',
+    date: 'April 10, 2026',
+    items: [
+      'Latest update banner added to home screen (version + date/time)',
+      'Version number and timestamp now shown prominently after login'
+    ]
+  },
   {
     version: '1.0',
     date: 'April 10, 2026',
@@ -235,6 +262,8 @@ function showMain() {
   document.getElementById('lockScreen').style.cssText = 'display:none !important';
   document.getElementById('mainScreen').style.cssText = 'display:block !important; min-height:100vh; padding:0 0 40px;';
   document.getElementById('versionNote').textContent = 'v' + APP_VERSION + ' · ' + APP_DATE;
+  document.getElementById('bannerVersion').textContent = 'Version ' + APP_VERSION;
+  document.getElementById('bannerDatetime').textContent = APP_DATETIME;
 }
 function lockOut() {
   localStorage.removeItem(SESSION_KEY);
