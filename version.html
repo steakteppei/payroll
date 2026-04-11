@@ -88,6 +88,72 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 // ════════════════════════════════════════════════════════
 var HISTORY = [
   {
+    file: 'payroll.html', type: 'payroll', version: '2.3',
+    datetime: '2026-04-10 17:30:00',
+    changes: ['GAS_URL updated to new deployment (v1.2)']
+  },
+  {
+    file: 'payroll-summary.html', type: 'payroll', version: '1.1',
+    datetime: '2026-04-10 17:30:00',
+    changes: ['GAS_URL updated to new deployment']
+  },
+  {
+    file: 'home.html', type: 'home', version: '2.1',
+    datetime: '2026-04-10 17:30:00',
+    changes: ['GAS URL update sync']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '2.1',
+    datetime: '2026-04-10 17:30:00',
+    changes: ['Cache updated to st-home-v2.1']
+  },
+  // ── previous ──
+  {
+    file: 'payroll.html', type: 'payroll', version: '2.2',
+    datetime: '2026-04-10 17:00:00',
+    changes: [
+      '① 重複Save確認ダイアログ追加',
+      '② Google Sheetsリンクをヒストリーヘッダーに追加',
+      '③ 勤務0時間の従業員を非表示',
+      '④ Reset確認ダイアログ追加',
+      '⑤ OT=0の場合はコピーボタンをグレーアウト・進捗カウント除外',
+      '⑥ チップに前回比較（+$XX / -$XX）表示',
+      '⑦ Pay Date横に曜日表示',
+      '⑧ Two Miles関連コード・フッターを削除',
+      '⑨ 給与サマリーページ（payroll-summary.html）新規作成・topbarにボタン追加',
+      '⑩ 時給関連列をExcel出力から削除',
+      '⑪ Clover APIボタン追加（GAS経由でチップ自動取得）',
+      '⑫ History表示を最新1件のみに変更'
+    ]
+  },
+  {
+    file: 'payroll-summary.html', type: 'payroll', version: '1.0',
+    datetime: '2026-04-10 17:00:00',
+    changes: [
+      '給与サマリーページ新規作成',
+      '全期間サマリーカード（合計チップ・平均・レート・期間数）',
+      'チップ推移バーチャート（直近12期間）',
+      '期間一覧（クリックで詳細表示）',
+      '従業員別チップ内訳テーブル・バーチャート'
+    ]
+  },
+  {
+    file: 'home.html', type: 'home', version: '2.0',
+    datetime: '2026-04-10 17:00:00',
+    changes: ['Payroll Summaryページ追加、payroll v2.2と同期']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '2.0',
+    datetime: '2026-04-10 17:00:00',
+    changes: ['Cache v2.0、payroll-summary.htmlをキャッシュ対象に追加']
+  },
+  {
+    file: 'gas_payroll.js', type: 'gas', version: '1.2',
+    datetime: '2026-04-10 17:00:00',
+    changes: ['Clover APIプロキシ（fetchCloverTips）追加', 'MID: 224B9RBTM3PB1、期間指定でチップ合計を返す']
+  },
+  // ── previous ──
+  {
     file: 'payroll.html', type: 'payroll', version: '2.1',
     datetime: '2026-04-10 15:30:00',
     changes: [

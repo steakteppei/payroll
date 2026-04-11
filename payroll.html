@@ -577,6 +577,7 @@ body {
     <div class="topbar-right">
       <div class="topbar-ver" id="topbarVer"></div>
       <button class="force-update-btn" onclick="forceUpdate()" title="Force reload latest version">↺ Update</button>
+      <button class="force-update-btn" onclick="window.location.href='payroll-summary.html'" title="Payroll Summary">📊 Summary</button>
       <button class="excel-btn" id="excelBtn" disabled onclick="downloadExcel()">⬇ Excel</button>
     </div>
   </div>
@@ -613,12 +614,18 @@ body {
           </div>
           <div class="field-row" style="margin-top:8px;">
             <div class="field-label">Pay Date</div>
-            <input class="field-input" type="date" id="payDate">
-            <div class="paydate-reason" id="payDateReason"></div>
+            <input class="field-input" type="date" id="payDate" onchange="updatePayDateDow()">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div class="paydate-reason" id="payDateReason"></div>
+              <div id="payDateDow" style="font-size:10px;color:var(--yellow);font-weight:600;"></div>
+            </div>
           </div>
           <div class="field-row">
             <div class="field-label">Total Tips (Clover) $</div>
-            <input class="field-input tips-input" type="number" id="tipsTotal" placeholder="0.00" step="0.01" min="0">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input class="field-input tips-input" type="number" id="tipsTotal" placeholder="0.00" step="0.01" min="0" style="flex:1;">
+              <button id="cloverBtn" onclick="fetchCloverTips()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text-hint);font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;" title="Fetch tips from Clover API">⟳ Clover</button>
+            </div>
           </div>
           <button class="calc-btn" id="calcBtn" onclick="calculate()" disabled style="margin-bottom:2px;">Calculate →</button>
         </div>
@@ -654,7 +661,9 @@ body {
 
       <!-- 4. History -->
       <div class="panel-section">
-        <div class="panel-section-header">History</div>
+        <div class="panel-section-header">History
+          <a href="https://docs.google.com/spreadsheets/d/1jPxu8ztrT_F6TFGxT8EbEtUx9D0oxjONgE9uHyyszx0/edit" target="_blank" style="font-size:9px;color:var(--blue);text-decoration:none;margin-left:6px;">📊 Sheets</a>
+        </div>
         <div class="panel-section-body" style="padding:10px;">
           <div class="history-list" id="historyList"></div>
         </div>
@@ -691,8 +700,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '2.1';
-var PAYROLL_DATETIME = '2026-04-10 13:57:37'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '2.3';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -790,6 +799,7 @@ function parseCSV(text, filename) {
     } else {
       reasonEl.textContent = '';
     }
+    updatePayDateDow();
   }
 
   // Show success
@@ -1044,12 +1054,33 @@ function renderTable() {
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('tableWrap').style.display = '';
 
+  // ③ 0時間の従業員を非表示（Kaceeは固定100hなので常に表示）
+  var visibleEmps = emps.filter(function(e) {
+    return e.key === 'kacee' || e.reg > 0 || e.ot > 0 || e.tipHours > 0;
+  });
+
+  // ⑥ 前回比較用データ取得
+  var lastRec = getLocalHistory()[0];
+  var lastEmpMap = {};
+  if (lastRec && lastRec.employees) {
+    lastRec.employees.forEach(function(e) { lastEmpMap[e.key] = e; });
+  }
+
   var html = '';
-  emps.forEach(function(e) {
-    var hasOT = e.ot > 0;
+  visibleEmps.forEach(function(e) {
     var regVal = e.key === 'kacee' ? '100' : e.reg.toFixed(2);
     var otVal  = e.ot > 0 ? e.ot.toFixed(2) : '0';
     var tipVal = '$' + e.tips.toFixed(2);
+
+    // ⑥ 前回比較
+    var prevEmp = lastEmpMap[e.key];
+    var tipDiff = prevEmp ? (e.tips - prevEmp.tips) : null;
+    var tipDiffHtml = '';
+    if (tipDiff !== null && Math.abs(tipDiff) >= 0.01) {
+      var sign = tipDiff > 0 ? '+' : '';
+      var color = tipDiff > 0 ? 'var(--green)' : 'var(--red)';
+      tipDiffHtml = '<span style="font-size:9px;color:' + color + ';margin-left:4px;">' + sign + '$' + tipDiff.toFixed(2) + '</span>';
+    }
 
     html += '<div class="emp-row" id="row-' + e.key + '">';
     html += '<div>';
@@ -1058,31 +1089,36 @@ function renderTable() {
       html += '<div class="emp-role" style="color:var(--blue);">Salaried — tip hours only</div>';
     } else if (e.key === 'kacee') {
       html += '<div class="emp-role" style="color:var(--orange);">Fixed 100h for tips</div>';
-    } else if (e.tipHours === 0) {
-      html += '<div class="emp-role">No hours this period</div>';
     }
     html += '</div>';
 
     html += '<div class="copy-grid">';
 
     // Regular hours
-    html += '<div class="copy-item' + (e.reg === 0 && e.key !== 'kacee' ? ' zero-item' : '') + '" id="ci-' + e.key + '-reg" onclick="copyVal(this,\'' + e.key + '\',\'reg\',\'' + regVal + '\')">';
+    html += '<div class="copy-item" id="ci-' + e.key + '-reg" onclick="copyVal(this,\'' + e.key + '\',\'reg\',\'' + regVal + '\')">';
     html += '<div class="copy-item-label">Regular Hrs</div>';
-    html += '<div class="copy-item-val' + (e.reg === 0 && e.key !== 'kacee' ? ' zero' : '') + '">' + regVal + '</div>';
+    html += '<div class="copy-item-val">' + regVal + '</div>';
     html += '<span class="copy-icon">⧉</span><span class="check-icon">✓</span>';
     html += '</div>';
 
-    // OT hours
-    html += '<div class="copy-item" id="ci-' + e.key + '-ot" onclick="copyVal(this,\'' + e.key + '\',\'ot\',\'' + otVal + '\')">';
-    html += '<div class="copy-item-label">OT Hrs</div>';
-    html += '<div class="copy-item-val' + (e.ot === 0 ? ' zero' : '') + '">' + otVal + '</div>';
-    html += '<span class="copy-icon">⧉</span><span class="check-icon">✓</span>';
-    html += '</div>';
+    // ⑤ OT=0の場合はグレーアウトしてクリック不可
+    if (e.ot === 0) {
+      html += '<div class="copy-item" id="ci-' + e.key + '-ot" style="opacity:0.3;cursor:not-allowed;pointer-events:none;">';
+      html += '<div class="copy-item-label">OT Hrs</div>';
+      html += '<div class="copy-item-val zero">0</div>';
+      html += '</div>';
+    } else {
+      html += '<div class="copy-item" id="ci-' + e.key + '-ot" onclick="copyVal(this,\'' + e.key + '\',\'ot\',\'' + otVal + '\')">';
+      html += '<div class="copy-item-label">OT Hrs</div>';
+      html += '<div class="copy-item-val">' + otVal + '</div>';
+      html += '<span class="copy-icon">⧉</span><span class="check-icon">✓</span>';
+      html += '</div>';
+    }
 
     // Tips
     html += '<div class="copy-item" id="ci-' + e.key + '-tips" onclick="copyVal(this,\'' + e.key + '\',\'tips\',\'' + e.tips.toFixed(2) + '\')">';
     html += '<div class="copy-item-label">Paycheck Tips</div>';
-    html += '<div class="copy-item-val tips">' + tipVal + '</div>';
+    html += '<div class="copy-item-val tips">' + tipVal + tipDiffHtml + '</div>';
     html += '<span class="copy-icon">⧉</span><span class="check-icon">✓</span>';
     html += '</div>';
 
@@ -1142,6 +1178,7 @@ function copyVal(el, key, field, val) {
 }
 
 function resetCopied() {
+  if (!confirm('Reset all copy progress?')) return;
   copiedState = {};
   document.querySelectorAll('.copy-item').forEach(function(el) { el.classList.remove('copied'); });
   document.querySelectorAll('.emp-row').forEach(function(el) { el.classList.remove('all-copied'); });
@@ -1150,20 +1187,66 @@ function resetCopied() {
 
 function updateProgress() {
   if (!calcResult) return;
-  var emps = calcResult.employees.filter(function(e) { return e.tipHours > 0; });
-  var done = emps.filter(function(e) {
+  var visibleEmps = calcResult.employees.filter(function(e) {
+    return e.key === 'kacee' || e.reg > 0 || e.ot > 0 || e.tipHours > 0;
+  });
+  var done = visibleEmps.filter(function(e) {
     var s = copiedState[e.key] || {};
-    return s.reg && s.ot && s.tips;
+    // ⑤ OT=0の場合はOTのコピーを不要とみなす
+    var otDone = e.ot === 0 ? true : s.ot;
+    return s.reg && otDone && s.tips;
   }).length;
-  var pct = emps.length > 0 ? (done / emps.length * 100) : 0;
+  var pct = visibleEmps.length > 0 ? (done / visibleEmps.length * 100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressText').textContent = done + ' / ' + emps.length;
+  document.getElementById('progressText').textContent = done + ' / ' + visibleEmps.length;
+}
+
+// ⑦ Pay Date横に曜日表示
+function updatePayDateDow() {
+  var val = document.getElementById('payDate').value;
+  var el = document.getElementById('payDateDow');
+  if (!val || !el) return;
+  var DOWS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var d = new Date(val + 'T12:00:00');
+  el.textContent = DOWS[d.getDay()];
+}
+
+// ⑪ Clover APIからチップ取得（GAS経由）
+var CLOVER_MID = '224B9RBTM3PB1';
+function fetchCloverTips() {
+  var from = document.getElementById('fromDate').value;
+  var to   = document.getElementById('toDate').value;
+  if (!from || !to) { alert('Please set From and To dates first.'); return; }
+  if (!gasReady()) { alert('GAS URL is not configured.'); return; }
+  var btn = document.getElementById('cloverBtn');
+  btn.textContent = '⏳...';
+  btn.disabled = true;
+  var url = GAS_URL + '?action=clover_tips&mid=' + CLOVER_MID + '&from=' + from + '&to=' + to;
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.textContent = '⟳ Clover';
+      btn.disabled = false;
+      if (data.status === 'ok' && data.tips !== undefined) {
+        document.getElementById('tipsTotal').value = data.tips.toFixed(2);
+        checkCalcReady();
+        btn.style.color = 'var(--green)';
+        setTimeout(function() { btn.style.color = ''; }, 2000);
+      } else {
+        alert('Could not fetch tips: ' + (data.message || 'Unknown error'));
+      }
+    })
+    .catch(function(err) {
+      btn.textContent = '⟳ Clover';
+      btn.disabled = false;
+      alert('Fetch failed: ' + err.message);
+    });
 }
 
 // ── SAVE HISTORY ──
 // ── GOOGLE SHEETS CONFIG ──
 // ★ Apps Script Web App URL をここに貼り付ける（セットアップ後）
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwHOr7Tp5JT1gdN_xynM7FZ_Z4XOMIQQE8TGNmSBPZ1t2fAt660rydGXHluV7khGaqY/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbz54YHaF9yUbxWX8O-cScFq5D-5-XA6PBN3kV9FV87lHEsLseaDkXDyYCInQ_N7pf9c/exec';
 
 // GAS_URLが未設定か確認
 function gasReady() { return GAS_URL && GAS_URL.length > 10; }
@@ -1172,8 +1255,15 @@ function gasReady() { return GAS_URL && GAS_URL.length > 10; }
 function saveRecord() {
   if (!calcResult) return;
 
+  // ① 同じ期間の重複チェック
+  var existing = getLocalHistory().find(function(r) {
+    return r.from === calcResult.from && r.to === calcResult.to;
+  });
+  if (existing) {
+    if (!confirm('A record for ' + fmtDateShort(calcResult.from) + ' – ' + fmtDateShort(calcResult.to) + ' already exists.\n\nOverwrite?')) return;
+  }
+
   if (!gasReady()) {
-    // GAS未設定 → localStorageにフォールバック＋警告
     saveLocalFallback();
     showGasWarning();
     return;
@@ -1272,14 +1362,14 @@ function renderHistory() {
     el.innerHTML = '<div class="history-empty">No records saved yet</div>';
     return;
   }
-  el.innerHTML = records.map(function(r) {
-    var label = (r.from ? fmtDateShort(r.from) : '?') + ' – ' + (r.to ? fmtDateShort(r.to) : '?');
-    var tips = '$' + parseFloat(r.tipsTotal||0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
-    return '<div class="history-item" onclick="loadRecord(' + r.id + ')">' +
-      '<div class="history-period">' + label + ' ' + tips + '</div>' +
-      '<button class="history-delete" onclick="event.stopPropagation();deleteRecord(' + r.id + ')">×</button>' +
-      '</div>';
-  }).join('');
+  // ⑫ 最新1件のみ表示
+  var r = records[0];
+  var label = (r.from ? fmtDateShort(r.from) : '?') + ' – ' + (r.to ? fmtDateShort(r.to) : '?');
+  var tips = '$' + parseFloat(r.tipsTotal||0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+  el.innerHTML = '<div class="history-item" onclick="loadRecord(' + r.id + ')">'
+    + '<div class="history-period">' + label + ' ' + tips + '</div>'
+    + '<button class="history-delete" onclick="event.stopPropagation();deleteRecord(' + r.id + ')">×</button>'
+    + '</div>';
 }
 
 function loadRecord(id) {
@@ -1343,38 +1433,23 @@ function setStatus(msg, ready) {
 // ── EXCEL DOWNLOAD ──
 function downloadExcel() {
   if (!calcResult) return;
-  // Build CSV with same layout as Teppei Excel
   var r = calcResult;
   var rows = [];
-  rows.push(['Payroll Report（給与レポート）']);
-  rows.push(['Company Name', 'Teppei USA, Inc.']);
-  rows.push(['DBA', 'Steak Teppei']);
-  rows.push(['From', fmtDateShort(r.from)]);
-  rows.push(['To',   fmtDateShort(r.to)]);
+  rows.push(['Steak Teppei — Payroll Report']);
+  rows.push(['Period', fmtDateShort(r.from) + ' – ' + fmtDateShort(r.to)]);
   rows.push(['Pay Date', fmtDateShort(r.payDate)]);
+  rows.push(['Total Tips', '$' + r.tipsTotal.toFixed(2)]);
   rows.push([]);
-  rows.push([null, null, '固定給', '時給', '労働時間', '小計', '残業時給', '残業時間', '残業合計', '時間合計', '給与合計', 'チップ', '総計']);
-  rows.push(['Employee Name', null, 'Salary', 'Regular Time', null, null, 'Over Time Pay', null, null, 'Payroll Total', null, 'Payroll Tips', 'Grand Total($)']);
-  rows.push(['First Name', 'Last Name', 'Amount($)', 'Rate($)', 'Hour(H)', 'Sub Total', 'Rate($)', 'Hour(H)', 'Sub Total', 'Total(H)', 'Total($)', null, null]);
+  rows.push(['Employee', 'Regular Hrs', 'OT Hrs', 'Tip Hours', 'Paycheck Tips ($)']);
 
   r.employees.forEach(function(e) {
-    var nameParts = e.display.split(' ');
-    var first = nameParts[0];
-    var last  = nameParts.slice(1).join(' ');
-    var regH  = e.key === 'kacee' ? 100 : e.reg;
-    var otH   = e.ot || null;
-    rows.push([first, last, null, null, regH, null, null, otH, null, e.tipHours, null, e.tips.toFixed(2), null]);
+    if (e.key === 'kacee' || e.reg > 0 || e.ot > 0 || e.tipHours > 0) {
+      rows.push([e.display, e.key === 'kacee' ? 100 : e.reg, e.ot || 0, e.tipHours, e.tips.toFixed(2)]);
+    }
   });
 
-  // Totals
-  rows.push(['Total', null, null, null, null, null, null, null, null, r.totalTipHours.toFixed(2), null, r.tipsTotal.toFixed(2), null]);
   rows.push([]);
-  rows.push([null, null, null, null, null, null, null, null, null, null, null, r.tipsTotal]);
-  // Footer
-  for (var i = 0; i < 8; i++) rows.push([]);
-  rows.push(['【送付先】']);
-  rows.push(['ご不明な点がございましたら、お気軽に、ご連絡くださいませ。']);
-  rows.push(['Two Miles 浜野(ahamano@twomiles.net)']);
+  rows.push(['Total', '', '', r.totalTipHours.toFixed(2), r.tipsTotal.toFixed(2)]);
 
   var csv = rows.map(function(row) {
     return row.map(function(cell) {
@@ -1391,7 +1466,7 @@ function downloadExcel() {
   var a = document.createElement('a');
   a.href = url;
   var period = (r.from || '').replace(/-/g,'').substring(2) + '-' + (r.to || '').replace(/-/g,'').substring(2);
-  a.download = period + '_Teppei_USA_Payroll_Report.csv';
+  a.download = period + '_SteakTeppei_Payroll.csv';
   a.click();
   URL.revokeObjectURL(url);
 }
