@@ -700,8 +700,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '2.9';
-var PAYROLL_DATETIME = '2026-04-10 15:14:02'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '3.0';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -761,6 +761,7 @@ function parseCSV(text, filename) {
   var colOT    = headers.findIndex(h => h.toLowerCase().includes('ot'));
 
   var empMap = {}; // key -> { reg, ot }
+  var lastKey = null; // 直前の従業員キー
 
   for (var i = headerIdx + 1; i < lines.length; i++) {
     var cols = parseCSVRow(lines[i]);
@@ -769,18 +770,30 @@ function parseCSV(text, filename) {
     var reg   = parseFloat(cols[colReg]  || 0) || 0;
     var ot    = parseFloat(cols[colOT]   || 0) || 0;
 
-    if (!first && !last) continue;
     if (first.toLowerCase() === 'total') continue;
+
+    // 名前なしの行 → 直前の従業員の追加ロール（合計行は除く）
+    if (!first && !last) {
+      // reg/otに実数値があり、lastKeyがある場合は加算
+      // ただし合計行（regが他の行の合計値になる）は除外するため
+      // 桁数チェック：他の行よりも明らかに大きい場合はスキップ
+      if (lastKey && empMap[lastKey] && reg > 0 && reg < 100) {
+        empMap[lastKey].reg += reg;
+        empMap[lastKey].ot  += ot;
+      }
+      continue;
+    }
 
     var key = empKey(first, last);
     var cfg = EMP_CONFIG[key];
-    if (cfg && cfg.skip) continue;
+    if (cfg && cfg.skip) { lastKey = null; continue; }
 
     if (!empMap[key]) {
       empMap[key] = { first: first, last: last, reg: 0, ot: 0, key: key };
     }
     empMap[key].reg += reg;
     empMap[key].ot  += ot;
+    lastKey = key;
   }
 
   csvData = { empMap: empMap, fromStr: fromStr, toStr: toStr };
