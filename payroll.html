@@ -700,8 +700,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '3.0';
-var PAYROLL_DATETIME = '2026-04-10 15:27:07'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '3.1';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -774,10 +774,8 @@ function parseCSV(text, filename) {
 
     // 名前なしの行 → 直前の従業員の追加ロール（合計行は除く）
     if (!first && !last) {
-      // reg/otに実数値があり、lastKeyがある場合は加算
-      // ただし合計行（regが他の行の合計値になる）は除外するため
-      // 桁数チェック：他の行よりも明らかに大きい場合はスキップ
-      if (lastKey && empMap[lastKey] && reg > 0 && reg < 100) {
+      // 合計行の特徴：regが直前従業員の累計reg以上 → スキップ
+      if (lastKey && empMap[lastKey] && reg > 0 && reg < empMap[lastKey].reg) {
         empMap[lastKey].reg += reg;
         empMap[lastKey].ot  += ot;
       }
