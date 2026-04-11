@@ -186,7 +186,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v2.1 · April 10, 2026 — View full version history ›</div>
+    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v2.2 · April 10, 2026 — View full version history ›</div>
   </div>
 </div>
 
@@ -204,10 +204,18 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION  = '2.1';
+var APP_VERSION  = '2.2';
 var APP_DATE     = 'April 10, 2026';
-var APP_DATETIME = '2026-04-10 14:21:06';
+var APP_DATETIME = 'PLACEHOLDER';
 var CHANGELOG = [
+  {
+    version: '2.2',
+    date: 'April 10, 2026',
+    items: [
+      'GAS URL updated (v5) — oauthScopes added for UrlFetchApp',
+      'Clover API tip fetch now works'
+    ]
+  },
   {
     version: '2.1',
     date: 'April 10, 2026',
