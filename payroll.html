@@ -700,8 +700,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '3.1';
-var PAYROLL_DATETIME = '2026-04-10 15:31:00'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '3.2';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -757,6 +757,7 @@ function parseCSV(text, filename) {
   var headers = parseCSVRow(lines[headerIdx]);
   var colFirst = headers.findIndex(h => h.toLowerCase().includes('first'));
   var colLast  = headers.findIndex(h => h.toLowerCase().includes('last'));
+  var colWage  = headers.findIndex(h => h.toLowerCase().includes('wage'));
   var colReg   = headers.findIndex(h => h.toLowerCase().includes('regular'));
   var colOT    = headers.findIndex(h => h.toLowerCase().includes('ot'));
 
@@ -767,15 +768,17 @@ function parseCSV(text, filename) {
     var cols = parseCSVRow(lines[i]);
     var first = (cols[colFirst] || '').trim();
     var last  = (cols[colLast]  || '').trim();
+    var wage  = (cols[colWage]  || '').trim();
     var reg   = parseFloat(cols[colReg]  || 0) || 0;
     var ot    = parseFloat(cols[colOT]   || 0) || 0;
 
     if (first.toLowerCase() === 'total') continue;
 
-    // 名前なしの行 → 直前の従業員の追加ロール（合計行は除く）
+    // 名前なしの行
     if (!first && !last) {
-      // 合計行の特徴：regが直前従業員の累計reg以上 → スキップ
-      if (lastKey && empMap[lastKey] && reg > 0 && reg < empMap[lastKey].reg) {
+      // wage rateに値がある → 追加ロール行（加算する）
+      // wage rateが空 → 合計行（スキップ）
+      if (lastKey && empMap[lastKey] && wage !== '' && reg > 0) {
         empMap[lastKey].reg += reg;
         empMap[lastKey].ot  += ot;
       }
