@@ -700,8 +700,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '2.4';
-var PAYROLL_DATETIME = '2026-04-10 14:35:01'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '2.5';
+var PAYROLL_DATETIME = 'PLACEHOLDER'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -1246,7 +1246,7 @@ function fetchCloverTips() {
 // ── SAVE HISTORY ──
 // ── GOOGLE SHEETS CONFIG ──
 // ★ Apps Script Web App URL をここに貼り付ける（セットアップ後）
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbwp4HIZzJ9kfcecKR1syGXPhXpB-qkdl-5_OeVYgNvYsybn4JSA3Y7CvIFFZpKznK5h/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyXRBNk_SEBYtwX7Wlm7Km2Qb8jup3Nt8bXWSZkLmDvpXEI0F5Xp17InkpDfctMgwWc/exec';
 
 // GAS_URLが未設定か確認
 function gasReady() { return GAS_URL && GAS_URL.length > 10; }
