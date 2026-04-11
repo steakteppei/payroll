@@ -1,5 +1,5 @@
 // ★ バージョンをhome.htmlのAPP_VERSIONと合わせて更新する
-var CACHE = 'st-home-v2.3';
+var CACHE = 'st-home-v2.4';
 var FILES = ['./home.html', './payroll.html', './version.html', './payroll-summary.html'];
 
 self.addEventListener('install', function(e) {
