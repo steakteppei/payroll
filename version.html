@@ -88,6 +88,26 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 // ════════════════════════════════════════════════════════
 var HISTORY = [
   {
+    file: 'payroll.html', type: 'payroll', version: '3.3',
+    datetime: '2026-06-19',
+    changes: [
+      'CSV parser supports new Homebase detailed-timesheet export (per-employee blocks, "Totals for" rows)',
+      'Multi-role hours auto-summed from Homebase totals (no manual wage-rate merge)',
+      'Old export format still auto-detected and supported',
+      'Unknown employees with hours are flagged on import'
+    ]
+  },
+  {
+    file: 'home.html', type: 'home', version: '3.1',
+    datetime: '2026-06-19',
+    changes: ['Changelog updated for new Homebase CSV format support']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '3.1',
+    datetime: '2026-06-19',
+    changes: ['Cache bumped to st-home-v3.1']
+  },
+  {
     file: 'payroll.html', type: 'payroll', version: '2.5',
     datetime: '2026-04-10 14:45:00',
     changes: ['GAS URL updated to v6 — UrlFetchApp authorized, Clover API working']

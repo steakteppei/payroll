@@ -186,7 +186,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v3.0 · April 10, 2026 — View full version history ›</div>
+    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v3.1 · June 19, 2026 — View full version history ›</div>
   </div>
 </div>
 
@@ -204,10 +204,20 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION  = '3.0';
-var APP_DATE     = 'April 10, 2026';
+var APP_VERSION  = '3.1';
+var APP_DATE     = 'June 19, 2026';
 var APP_DATETIME = '2026-04-10 15:35:50';
 var CHANGELOG = [
+  {
+    version: '3.1',
+    date: 'June 19, 2026',
+    items: [
+      'CSV parser now reads Homebase detailed-timesheet export (per-employee blocks with "Totals for" rows)',
+      'Multi-role hours auto-summed from Homebase totals — wage-rate merge no longer needed',
+      'Old CSV export format still supported (auto-detected)',
+      'New people not in config are flagged on import if they have hours'
+    ]
+  },
   {
     version: '3.0',
     date: 'April 10, 2026',

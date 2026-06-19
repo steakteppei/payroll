@@ -700,7 +700,7 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '3.2';
+var PAYROLL_VERSION  = '3.3';
 var PAYROLL_DATETIME = '2026-04-10 15:35:50'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
@@ -721,6 +721,23 @@ var EMP_CONFIG = {
   'david':    { display: 'David Akihiro Nako',   skip: true }
 };
 
+// Full name (lowercase) -> EMP_CONFIG key. Used by the new Homebase
+// detailed-timesheet export, where each employee block has a single
+// "Name" column instead of separate First/Last columns.
+var NAME_TO_KEY = {
+  'kacee a takafuji':  'kacee',
+  'qiongmei he':       'qiongmei',
+  'shaine tamamoto':   'shaine',
+  'shouling xue':      'shouling',
+  'xingyu wang':       'xingyu',
+  'yoshimi kagehiro':  'yoshimi',
+  'yu minghua':        'yu',
+  'zhu he':            'zhu',
+  'kai shuto':         'kai',
+  'david a nako':      'david',
+  'akihiro hironishi': 'david'
+};
+
 function empKey(first, last) {
   return (first || '').toLowerCase().trim();
 }
@@ -738,14 +755,8 @@ function handleCSV(input) {
 
 function parseCSV(text, filename) {
   var lines = text.trim().split('\n');
-  // Find header row
-  var headerIdx = -1;
-  for (var i = 0; i < lines.length; i++) {
-    if (lines[i].toLowerCase().includes('first name')) { headerIdx = i; break; }
-  }
-  if (headerIdx < 0) { alert('Could not find header row in CSV'); return; }
 
-  // Parse period from line 1
+  // Parse period from line 1 (same position in both export formats)
   var periodLine = lines[1] || '';
   var periodMatch = periodLine.match(/(\d{2}\/\d{2}\/\d{4})\s+To\s+(\d{2}\/\d{2}\/\d{4})/i);
   var fromStr = '', toStr = '';
@@ -754,47 +765,99 @@ function parseCSV(text, filename) {
     toStr   = isoDate(periodMatch[2]);
   }
 
-  var headers = parseCSVRow(lines[headerIdx]);
-  var colFirst = headers.findIndex(h => h.toLowerCase().includes('first'));
-  var colLast  = headers.findIndex(h => h.toLowerCase().includes('last'));
-  var colWage  = headers.findIndex(h => h.toLowerCase().includes('wage'));
-  var colReg   = headers.findIndex(h => h.toLowerCase().includes('regular'));
-  var colOT    = headers.findIndex(h => h.toLowerCase().includes('ot'));
+  // Detect export format.
+  //   OLD: a header row containing "First name" / "Last name" columns,
+  //        one row per employee, extra-role rows have no name.
+  //   NEW: per-employee blocks, header starts with "Name," and each block
+  //        ends with a "Totals for {name}" row carrying summed Reg/OT hours.
+  var oldHeaderIdx = -1, newHeaderIdx = -1;
+  for (var i = 0; i < lines.length; i++) {
+    var low = lines[i].toLowerCase();
+    if (oldHeaderIdx < 0 && low.indexOf('first name') >= 0) oldHeaderIdx = i;
+    if (newHeaderIdx < 0 && low.indexOf('name,') === 0 && low.indexOf('regular hours') >= 0) newHeaderIdx = i;
+  }
 
-  var empMap = {}; // key -> { reg, ot }
-  var lastKey = null; // 直前の従業員キー
+  var empMap = {}; // key -> { reg, ot, key }
 
-  for (var i = headerIdx + 1; i < lines.length; i++) {
-    var cols = parseCSVRow(lines[i]);
-    var first = (cols[colFirst] || '').trim();
-    var last  = (cols[colLast]  || '').trim();
-    var wage  = (cols[colWage]  || '').trim();
-    var reg   = parseFloat(cols[colReg]  || 0) || 0;
-    var ot    = parseFloat(cols[colOT]   || 0) || 0;
+  if (oldHeaderIdx >= 0) {
+    // ── OLD FORMAT (First name / Last name columns) ──
+    var headers = parseCSVRow(lines[oldHeaderIdx]);
+    var colFirst = headers.findIndex(h => h.toLowerCase().includes('first'));
+    var colLast  = headers.findIndex(h => h.toLowerCase().includes('last'));
+    var colWage  = headers.findIndex(h => h.toLowerCase().includes('wage'));
+    var colReg   = headers.findIndex(h => h.toLowerCase().includes('regular'));
+    var colOT    = headers.findIndex(h => h.toLowerCase().includes('ot'));
+    var lastKey = null;
 
-    if (first.toLowerCase() === 'total') continue;
+    for (var i = oldHeaderIdx + 1; i < lines.length; i++) {
+      var cols = parseCSVRow(lines[i]);
+      var first = (cols[colFirst] || '').trim();
+      var last  = (cols[colLast]  || '').trim();
+      var wage  = (cols[colWage]  || '').trim();
+      var reg   = parseFloat(cols[colReg]  || 0) || 0;
+      var ot    = parseFloat(cols[colOT]   || 0) || 0;
 
-    // 名前なしの行
-    if (!first && !last) {
-      // wage rateに値がある → 追加ロール行（加算する）
-      // wage rateが空 → 合計行（スキップ）
-      if (lastKey && empMap[lastKey] && wage !== '' && reg > 0) {
-        empMap[lastKey].reg += reg;
-        empMap[lastKey].ot  += ot;
+      if (first.toLowerCase() === 'total') continue;
+
+      // Nameless row: wage rate present = extra-role row (add), empty = subtotal (skip)
+      if (!first && !last) {
+        if (lastKey && empMap[lastKey] && wage !== '' && reg > 0) {
+          empMap[lastKey].reg += reg;
+          empMap[lastKey].ot  += ot;
+        }
+        continue;
       }
-      continue;
+
+      var key = empKey(first, last);
+      var cfg = EMP_CONFIG[key];
+      if (cfg && cfg.skip) { lastKey = null; continue; }
+
+      if (!empMap[key]) empMap[key] = { reg: 0, ot: 0, key: key };
+      empMap[key].reg += reg;
+      empMap[key].ot  += ot;
+      lastKey = key;
     }
 
-    var key = empKey(first, last);
-    var cfg = EMP_CONFIG[key];
-    if (cfg && cfg.skip) { lastKey = null; continue; }
+  } else if (newHeaderIdx >= 0) {
+    // ── NEW FORMAT (per-employee blocks, "Totals for {name}" rows) ──
+    // Totals rows already merge multi-role hours, so no wage-rate logic needed.
+    var headers = parseCSVRow(lines[newHeaderIdx]);
+    var colReg = headers.findIndex(h => h.toLowerCase().trim() === 'regular hours');
+    var colOT  = headers.findIndex(h => h.toLowerCase().trim() === 'ot hours');
+    var unknown = [];
 
-    if (!empMap[key]) {
-      empMap[key] = { first: first, last: last, reg: 0, ot: 0, key: key };
+    for (var i = 0; i < lines.length; i++) {
+      var cols = parseCSVRow(lines[i]);
+      var label = (cols[0] || '').trim();
+      if (label.toLowerCase().indexOf('totals for ') !== 0) continue;
+
+      var fullName = label.substring(11).trim(); // strip "Totals for "
+      var reg = parseFloat(cols[colReg] || 0) || 0;
+      var ot  = parseFloat(cols[colOT]  || 0) || 0;
+      var key = NAME_TO_KEY[fullName.toLowerCase()];
+
+      if (!key) {
+        // Unknown person — flag only if they actually worked, so a new hire
+        // who clocked hours isn't silently dropped from the tip pool.
+        if (reg > 0 || ot > 0) unknown.push(fullName + ' (' + (reg + ot).toFixed(2) + 'h)');
+        continue;
+      }
+      var cfg = EMP_CONFIG[key];
+      if (cfg && cfg.skip) continue;
+
+      if (!empMap[key]) empMap[key] = { reg: 0, ot: 0, key: key };
+      empMap[key].reg += reg;
+      empMap[key].ot  += ot;
     }
-    empMap[key].reg += reg;
-    empMap[key].ot  += ot;
-    lastKey = key;
+
+    if (unknown.length) {
+      alert('Employee(s) not in config — excluded from tips:\n' + unknown.join('\n') +
+            '\n\nAdd them to NAME_TO_KEY / EMP_CONFIG if they should be paid.');
+    }
+
+  } else {
+    alert('Could not find header row in CSV');
+    return;
   }
 
   csvData = { empMap: empMap, fromStr: fromStr, toStr: toStr };
