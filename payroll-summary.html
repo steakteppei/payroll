@@ -86,8 +86,11 @@ body{background:var(--bg);font-family:-apple-system,'DM Sans',sans-serif;color:v
   <div id="mainContent" style="display:none;"></div>
 </div>
 
+<script src="./config.js"></script>
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxPOnlUvOjp9oFCz96vexbYE324mDKULtz2fUbdmJQTFUuB-M8rRgGapA5_ICqKO8cD/exec';
+var GAS_URL    = (window.ST_CONFIG && window.ST_CONFIG.GAS_URL)    || '';
+var GAS_SECRET = (window.ST_CONFIG && window.ST_CONFIG.GAS_SECRET) || '';
+var SECRET_QS  = '&secret=' + encodeURIComponent(GAS_SECRET);
 var allRecords = [];
 var selectedId = null;
 
@@ -106,7 +109,7 @@ function fmt$(n) { return '$' + parseFloat(n||0).toLocaleString('en-US',{minimum
 function fmt2(n) { return parseFloat(n||0).toFixed(2); }
 
 function loadData() {
-  fetch(GAS_URL + '?action=list')
+  fetch(GAS_URL + '?action=list' + SECRET_QS)
     .then(function(r){ return r.json(); })
     .then(function(data){
       if (data && data.records && data.records.length) {

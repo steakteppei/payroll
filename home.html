@@ -186,7 +186,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
       <div class="app-card-arrow">›</div>
     </a>
 
-    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v3.1 · June 19, 2026 — View full version history ›</div>
+    <div class="version-note" id="versionNote" onclick="window.location.href='./version.html'">v3.2 · June 19, 2026 — View full version history ›</div>
   </div>
 </div>
 
@@ -204,10 +204,20 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',-apple-system,s
 // ════════════════════════════════════════
 // ★ 更新のたびにここを編集する
 // ════════════════════════════════════════
-var APP_VERSION  = '3.1';
+var APP_VERSION  = '3.2';
 var APP_DATE     = 'June 19, 2026';
-var APP_DATETIME = '2026-06-19 01:25:57';
+var APP_DATETIME = '2026-04-10 15:35:50';
 var CHANGELOG = [
+  {
+    version: '3.2',
+    date: 'June 19, 2026',
+    items: [
+      'Login password now stored as a SHA-256 hash instead of plaintext',
+      'GAS endpoint moved to a shared config.js — edit the URL in one place only',
+      'Access secret added to all Google Sheets / Clover requests',
+      'Employee config and name lookup merged into one list (handles renames via aliases)'
+    ]
+  },
   {
     version: '3.1',
     date: 'June 19, 2026',
@@ -370,33 +380,45 @@ var CHANGELOG = [
 // ════════════════════════════════════════
 // ★ パスワード変更はここだけ
 // ════════════════════════════════════════
-var CURRENT_PW  = 'teppei2026';
+// Password is stored as a SHA-256 hash, not plaintext. To change it,
+// compute the new hash (e.g. `printf 'newpass' | sha256sum`) and paste here.
+var PW_HASH     = '5d4efd9c85999edb2c4529e313e68383df4d5b4924202e5e4c2195f4a81e749d';
 var SESSION_KEY = 'st_tools_auth';
 var CL_KEY      = 'st_tools_cl_seen';
+
+function sha256(str) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function(buf) {
+    return Array.from(new Uint8Array(buf)).map(function(b) {
+      return b.toString(16).padStart(2, '0');
+    }).join('');
+  });
+}
 
 function checkSession() {
   try {
     var s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
     if (!s || !s.expiry || Date.now() > s.expiry) { localStorage.removeItem(SESSION_KEY); return false; }
-    return s.pw === CURRENT_PW;
+    return s.pw === PW_HASH;
   } catch(e) { return false; }
 }
 function saveSession() {
   var days = document.getElementById('rememberMe').checked ? 30 : 0;
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ pw: CURRENT_PW, expiry: Date.now() + (days > 0 ? days * 86400000 : 3600000) }));
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ pw: PW_HASH, expiry: Date.now() + (days > 0 ? days * 86400000 : 3600000) }));
 }
 function unlock() {
   var pw = document.getElementById('pwInput').value;
   if (!pw) return;
-  if (pw === CURRENT_PW) {
-    saveSession(); showMain(); checkChangelog();
-  } else {
-    var inp = document.getElementById('pwInput');
-    inp.classList.add('error');
-    document.getElementById('lockError').textContent = 'Incorrect password';
-    setTimeout(function() { inp.classList.remove('error'); document.getElementById('lockError').textContent = ''; }, 1500);
-    inp.value = ''; inp.focus();
-  }
+  sha256(pw).then(function(h) {
+    if (h === PW_HASH) {
+      saveSession(); showMain(); checkChangelog();
+    } else {
+      var inp = document.getElementById('pwInput');
+      inp.classList.add('error');
+      document.getElementById('lockError').textContent = 'Incorrect password';
+      setTimeout(function() { inp.classList.remove('error'); document.getElementById('lockError').textContent = ''; }, 1500);
+      inp.value = ''; inp.focus();
+    }
+  });
 }
 function showMain() {
   document.getElementById('lockScreen').style.cssText = 'display:none !important';

@@ -88,6 +88,35 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 // ════════════════════════════════════════════════════════
 var HISTORY = [
   {
+    file: 'config.js', type: 'config', version: '1.0',
+    datetime: '2026-06-19',
+    changes: ['New shared config — GAS URL + access secret in one place']
+  },
+  {
+    file: 'payroll.html', type: 'payroll', version: '3.4',
+    datetime: '2026-06-19',
+    changes: [
+      'GAS URL read from shared config.js (no more editing two files)',
+      'Access secret sent on every Sheets / Clover request',
+      'Employee config + name lookup merged into one list, rename-tolerant via aliases'
+    ]
+  },
+  {
+    file: 'payroll-summary.html', type: 'payroll', version: '1.4',
+    datetime: '2026-06-19',
+    changes: ['Reads GAS URL + secret from shared config.js']
+  },
+  {
+    file: 'home.html', type: 'home', version: '3.2',
+    datetime: '2026-06-19',
+    changes: ['Login password stored as SHA-256 hash instead of plaintext']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '3.2',
+    datetime: '2026-06-19',
+    changes: ['Cache bumped to st-home-v3.2; config.js added to cached files']
+  },
+  {
     file: 'payroll.html', type: 'payroll', version: '3.3',
     datetime: '2026-06-19',
     changes: [

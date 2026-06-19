@@ -696,12 +696,13 @@ body {
   </div>
 </div>
 
+<script src="./config.js"></script>
 <script>
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '3.3';
-var PAYROLL_DATETIME = '2026-06-19 01:25:57'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '3.4';
+var PAYROLL_DATETIME = '2026-04-10 15:35:50'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -709,34 +710,26 @@ var copiedState = {}; // empKey -> { reg, ot, tips }
 
 // ── EMPLOYEE CONFIG ──
 var EMP_CONFIG = {
-  'kacee':    { display: 'Kacee A. Takafuji',  fixedHours: 100,  skipOT: false },
-  'qiongmei': { display: 'Qiongmei He',         fixedHours: null, skipOT: false },
-  'shaine':   { display: 'Shaine Tamamoto',     fixedHours: null, skipOT: false, isSalaried: true },
-  'shouling': { display: 'Shouling Xue',         fixedHours: null, skipOT: false },
-  'xingyu':   { display: 'Xingyu Wang',          fixedHours: null, skipOT: false },
-  'yoshimi':  { display: 'Yoshimi Kagehiro',     fixedHours: null, skipOT: false },
-  'yu':       { display: 'Yu Minghua',           fixedHours: null, skipOT: false },
-  'zhu':      { display: 'Zhu He',               fixedHours: null, skipOT: false },
-  'kai':      { display: 'Kai Shuto',            fixedHours: null, skipOT: false },
-  'david':    { display: 'David Akihiro Nako',   skip: true }
+  'kacee':    { display: 'Kacee A. Takafuji',  fixedHours: 100,  skipOT: false, names: ['kacee a takafuji'] },
+  'qiongmei': { display: 'Qiongmei He',         fixedHours: null, skipOT: false, names: ['qiongmei he'] },
+  'shaine':   { display: 'Shaine Tamamoto',     fixedHours: null, skipOT: false, isSalaried: true, names: ['shaine tamamoto'] },
+  'shouling': { display: 'Shouling Xue',         fixedHours: null, skipOT: false, names: ['shouling xue'] },
+  'xingyu':   { display: 'Xingyu Wang',          fixedHours: null, skipOT: false, names: ['xingyu wang'] },
+  'yoshimi':  { display: 'Yoshimi Kagehiro',     fixedHours: null, skipOT: false, names: ['yoshimi kagehiro'] },
+  'yu':       { display: 'Yu Minghua',           fixedHours: null, skipOT: false, names: ['yu minghua'] },
+  'zhu':      { display: 'Zhu He',               fixedHours: null, skipOT: false, names: ['zhu he'] },
+  'kai':      { display: 'Kai Shuto',            fixedHours: null, skipOT: false, names: ['kai shuto'] },
+  'david':    { display: 'David Akihiro Nako',   skip: true, names: ['david a nako', 'akihiro hironishi', 'david akihiro nako'] }
 };
 
-// Full name (lowercase) -> EMP_CONFIG key. Used by the new Homebase
-// detailed-timesheet export, where each employee block has a single
-// "Name" column instead of separate First/Last columns.
-var NAME_TO_KEY = {
-  'kacee a takafuji':  'kacee',
-  'qiongmei he':       'qiongmei',
-  'shaine tamamoto':   'shaine',
-  'shouling xue':      'shouling',
-  'xingyu wang':       'xingyu',
-  'yoshimi kagehiro':  'yoshimi',
-  'yu minghua':        'yu',
-  'zhu he':            'zhu',
-  'kai shuto':         'kai',
-  'david a nako':      'david',
-  'akihiro hironishi': 'david'
-};
+// Reverse lookup: full name (lowercase) -> EMP_CONFIG key, built from the
+// `names` arrays above. To handle a rename or a name typo in Homebase,
+// just add the new spelling to that employee's `names` — one place, no
+// separate table to keep in sync.
+var NAME_TO_KEY = {};
+Object.keys(EMP_CONFIG).forEach(function(k) {
+  (EMP_CONFIG[k].names || []).forEach(function(n) { NAME_TO_KEY[n.toLowerCase().trim()] = k; });
+});
 
 function empKey(first, last) {
   return (first || '').toLowerCase().trim();
@@ -1298,7 +1291,7 @@ function fetchCloverTips() {
   var btn = document.getElementById('cloverBtn');
   btn.textContent = '⏳...';
   btn.disabled = true;
-  var url = GAS_URL + '?action=clover_tips&mid=' + CLOVER_MID + '&from=' + from + '&to=' + to;
+  var url = GAS_URL + '?action=clover_tips&mid=' + CLOVER_MID + '&from=' + from + '&to=' + to + SECRET_QS;
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -1323,7 +1316,9 @@ function fetchCloverTips() {
 // ── SAVE HISTORY ──
 // ── GOOGLE SHEETS CONFIG ──
 // ★ Apps Script Web App URL をここに貼り付ける（セットアップ後）
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbxPOnlUvOjp9oFCz96vexbYE324mDKULtz2fUbdmJQTFUuB-M8rRgGapA5_ICqKO8cD/exec';
+var GAS_URL    = (window.ST_CONFIG && window.ST_CONFIG.GAS_URL)    || '';
+var GAS_SECRET = (window.ST_CONFIG && window.ST_CONFIG.GAS_SECRET) || '';
+var SECRET_QS  = '&secret=' + encodeURIComponent(GAS_SECRET);
 
 // GAS_URLが未設定か確認
 function gasReady() { return GAS_URL && GAS_URL.length > 10; }
@@ -1354,7 +1349,7 @@ function saveRecord() {
 
   // GETリクエストでGASに送信（CORS問題を回避）
   var encoded = encodeURIComponent(JSON.stringify(rec));
-  fetch(GAS_URL + '?action=save&data=' + encoded)
+  fetch(GAS_URL + '?action=save&data=' + encoded + SECRET_QS)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === 'ok') {
@@ -1420,7 +1415,7 @@ function loadHistoryFromSheets() {
   var el = document.getElementById('historyList');
   el.innerHTML = '<div class="history-empty">⏳ Loading...</div>';
 
-  fetch(GAS_URL + '?action=list')
+  fetch(GAS_URL + '?action=list' + SECRET_QS)
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data && data.records) {
@@ -1485,7 +1480,7 @@ function deleteRecord(id) {
 
   // Sheetsからも削除
   if (gasReady()) {
-    fetch(GAS_URL + '?action=delete&id=' + id).catch(function(){});
+    fetch(GAS_URL + '?action=delete&id=' + id + SECRET_QS).catch(function(){});
   }
   renderHistory();
 }
