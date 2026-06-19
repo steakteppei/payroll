@@ -88,6 +88,24 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 // ════════════════════════════════════════════════════════
 var HISTORY = [
   {
+    file: 'payroll.html', type: 'payroll', version: '3.5',
+    datetime: '2026-06-19',
+    changes: [
+      'Reconciliation banner — parsed hours checked against Homebase grand-total row on every import',
+      'Clover fetch shows count breakdown (paid / refunded-voided excluded / total)'
+    ]
+  },
+  {
+    file: 'home.html', type: 'home', version: '3.3',
+    datetime: '2026-06-19',
+    changes: ['Changelog updated for reconciliation + Clover breakdown']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '3.3',
+    datetime: '2026-06-19',
+    changes: ['Cache bumped to st-home-v3.3']
+  },
+  {
     file: 'config.js', type: 'config', version: '1.0',
     datetime: '2026-06-19',
     changes: ['New shared config — GAS URL + access secret in one place']

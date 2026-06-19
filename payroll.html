@@ -172,6 +172,10 @@ body {
 }
 .upload-text { font-size: 11px; color: var(--text-sub); }
 .upload-text strong { color: var(--orange); }
+.recon-banner { margin-top: 8px; padding: 7px 9px; border-radius: 6px; font-size: 10px; line-height: 1.45; white-space: normal; }
+.recon-banner.ok  { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.30); }
+.recon-banner.bad { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.40); }
+.clover-detail { margin-top: 5px; font-size: 10px; color: var(--text-hint); line-height: 1.4; white-space: normal; }
 
 /* Form fields */
 .field-row {
@@ -595,6 +599,7 @@ body {
             <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(this)">
             <div class="upload-text">📂 <strong>Click or drag</strong> CSV here</div>
           </div>
+          <div class="recon-banner" id="reconBanner" style="display:none;"></div>
         </div>
       </div>
 
@@ -626,6 +631,7 @@ body {
               <input class="field-input tips-input" type="number" id="tipsTotal" placeholder="0.00" step="0.01" min="0" style="flex:1;">
               <button id="cloverBtn" onclick="fetchCloverTips()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text-hint);font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;" title="Fetch tips from Clover API">⟳ Clover</button>
             </div>
+            <div class="clover-detail" id="cloverDetail" style="display:none;"></div>
           </div>
           <button class="calc-btn" id="calcBtn" onclick="calculate()" disabled style="margin-bottom:2px;">Calculate →</button>
         </div>
@@ -701,8 +707,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '3.4';
-var PAYROLL_DATETIME = '2026-06-19 01:43:55'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '3.5';
+var PAYROLL_DATETIME = '2026-04-10 15:35:50'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -771,6 +777,7 @@ function parseCSV(text, filename) {
   }
 
   var empMap = {}; // key -> { reg, ot, key }
+  var recon = null; // Homebase grand-total reconciliation (new format only)
 
   if (oldHeaderIdx >= 0) {
     // ── OLD FORMAT (First name / Last name columns) ──
@@ -818,15 +825,27 @@ function parseCSV(text, filename) {
     var colReg = headers.findIndex(h => h.toLowerCase().trim() === 'regular hours');
     var colOT  = headers.findIndex(h => h.toLowerCase().trim() === 'ot hours');
     var unknown = [];
+    var rawReg = 0, rawOt = 0;          // sum of every "Totals for" row (parse-completeness check)
+    var fileReg = null, fileOt = null;  // Homebase's own grand-total "Totals" row
 
     for (var i = 0; i < lines.length; i++) {
       var cols = parseCSVRow(lines[i]);
       var label = (cols[0] || '').trim();
-      if (label.toLowerCase().indexOf('totals for ') !== 0) continue;
+      var lower = label.toLowerCase();
+
+      // Grand-total row at the end of the file ("Totals", not "Totals for ...")
+      if (lower === 'totals') {
+        fileReg = parseFloat(cols[colReg] || 0) || 0;
+        fileOt  = parseFloat(cols[colOT]  || 0) || 0;
+        continue;
+      }
+
+      if (lower.indexOf('totals for ') !== 0) continue;
 
       var fullName = label.substring(11).trim(); // strip "Totals for "
       var reg = parseFloat(cols[colReg] || 0) || 0;
       var ot  = parseFloat(cols[colOT]  || 0) || 0;
+      rawReg += reg; rawOt += ot; // count everyone for the reconciliation check
       var key = NAME_TO_KEY[fullName.toLowerCase()];
 
       if (!key) {
@@ -843,6 +862,16 @@ function parseCSV(text, filename) {
       empMap[key].ot  += ot;
     }
 
+    // Reconciliation: did we read every employee block? Compare our own sum
+    // of all "Totals for" rows against Homebase's grand-total "Totals" row.
+    if (fileReg !== null) {
+      recon = {
+        rawReg: rawReg, rawOt: rawOt,
+        fileReg: fileReg, fileOt: fileOt,
+        ok: Math.abs(rawReg - fileReg) < 0.01 && Math.abs(rawOt - fileOt) < 0.01
+      };
+    }
+
     if (unknown.length) {
       alert('Employee(s) not in config — excluded from tips:\n' + unknown.join('\n') +
             '\n\nAdd them to NAME_TO_KEY / EMP_CONFIG if they should be paid.');
@@ -853,7 +882,7 @@ function parseCSV(text, filename) {
     return;
   }
 
-  csvData = { empMap: empMap, fromStr: fromStr, toStr: toStr };
+  csvData = { empMap: empMap, fromStr: fromStr, toStr: toStr, recon: recon };
 
   // Autofill dates
   if (fromStr) document.getElementById('fromDate').value = fromStr;
@@ -877,9 +906,30 @@ function parseCSV(text, filename) {
   zone.classList.add('loaded');
   zone.querySelector('.upload-text').innerHTML = '✓ <strong>' + filename + '</strong>';
 
+  // Reconciliation banner: confirms every employee block was read
+  renderReconBanner(csvData.recon);
+
   // Enable calc button if tips filled
   checkCalcReady();
   setStatus('CSV loaded — enter tips and calculate', false);
+}
+
+// Compares our parsed hour totals against Homebase's own grand-total row.
+// Green = nothing was dropped; red = a block was misread, do not trust the numbers.
+function renderReconBanner(recon) {
+  var el = document.getElementById('reconBanner');
+  if (!el) return;
+  if (!recon) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  if (recon.ok) {
+    el.className = 'recon-banner ok';
+    el.innerHTML = '✓ Matches Homebase totals &nbsp;·&nbsp; Reg ' + recon.fileReg.toFixed(2) + 'h &nbsp;·&nbsp; OT ' + recon.fileOt.toFixed(2) + 'h';
+  } else {
+    el.className = 'recon-banner bad';
+    el.innerHTML = '⚠ Does NOT match Homebase totals — some rows may be misread.<br>'
+      + 'Parsed: Reg ' + recon.rawReg.toFixed(2) + ' / OT ' + recon.rawOt.toFixed(2)
+      + ' &nbsp;|&nbsp; Homebase: Reg ' + recon.fileReg.toFixed(2) + ' / OT ' + recon.fileOt.toFixed(2);
+  }
 }
 
 function isoDate(mmddyyyy) {
@@ -1302,6 +1352,18 @@ function fetchCloverTips() {
         checkCalcReady();
         btn.style.color = 'var(--green)';
         setTimeout(function() { btn.style.color = ''; }, 2000);
+        // Show what was counted, so the figure isn't a black box.
+        var cd = document.getElementById('cloverDetail');
+        if (cd) {
+          cd.style.display = 'block';
+          if (data.count !== undefined) {
+            cd.innerHTML = '\u2713 $' + data.tips.toFixed(2) + ' from ' + data.success + ' paid'
+              + ' \u00b7 ' + (data.excluded || 0) + ' refunded/voided excluded'
+              + ' (of ' + data.count + ' total payments)';
+          } else {
+            cd.innerHTML = '\u2713 $' + data.tips.toFixed(2) + ' fetched \u00b7 update GAS to v1.6 to see the count breakdown';
+          }
+        }
       } else {
         alert('Could not fetch tips: ' + (data.message || 'Unknown error'));
       }
