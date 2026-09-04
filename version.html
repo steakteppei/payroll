@@ -88,6 +88,24 @@ html,body{background:var(--bg);font-family:'DM Sans',-apple-system,sans-serif;co
 // ════════════════════════════════════════════════════════
 var HISTORY = [
   {
+    file: 'payroll.html', type: 'payroll', version: '3.6',
+    datetime: '2026-09-03',
+    changes: [
+      'Three new staff added to the tip pool: Damour Danny, Jesson Lopez, John O\'Connor (normal proration, reg + OT)',
+      'Rounding remainder now assigned to the last employee with tip hours, so zero-hour names never collect cents and shown tips sum to the exact total'
+    ]
+  },
+  {
+    file: 'home.html', type: 'home', version: '3.4',
+    datetime: '2026-09-03',
+    changes: ['Changelog updated for the three new tip-pool members']
+  },
+  {
+    file: 'sw-home.js', type: 'sw', version: '3.4',
+    datetime: '2026-09-03',
+    changes: ['Cache bumped to st-home-v3.4']
+  },
+  {
     file: 'payroll.html', type: 'payroll', version: '3.5',
     datetime: '2026-06-19',
     changes: [
@@ -109,6 +127,11 @@ var HISTORY = [
     file: 'config.js', type: 'config', version: '1.0',
     datetime: '2026-06-19',
     changes: ['New shared config — GAS URL + access secret in one place']
+  },
+  {
+    file: 'gas_payroll.js', type: 'gas', version: '1.6',
+    datetime: '2026-06-19',
+    changes: ['SECRET constant added — doGet/doPost reject requests whose secret does not match config.js']
   },
   {
     file: 'payroll.html', type: 'payroll', version: '3.4',

@@ -707,8 +707,8 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '3.5';
-var PAYROLL_DATETIME = '2026-06-19 02:11:28'; // GitHub Actionsが自動でHawaii時刻に置換
+var PAYROLL_VERSION  = '3.6';
+var PAYROLL_DATETIME = '2026-04-10 15:35:50'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
 var calcResult = null;
@@ -725,6 +725,9 @@ var EMP_CONFIG = {
   'yu':       { display: 'Yu Minghua',           fixedHours: null, skipOT: false, names: ['yu minghua'] },
   'zhu':      { display: 'Zhu He',               fixedHours: null, skipOT: false, names: ['zhu he'] },
   'kai':      { display: 'Kai Shuto',            fixedHours: null, skipOT: false, names: ['kai shuto'] },
+  'damour':   { display: 'Damour Danny',          fixedHours: null, skipOT: false, names: ['damour danny'] },
+  'jesson':   { display: 'Jesson Lopez',          fixedHours: null, skipOT: false, names: ['jesson lopez'] },
+  'john':     { display: "John O'Connor",         fixedHours: null, skipOT: false, names: ["john o'connor"] },
   'david':    { display: 'David Akihiro Nako',   skip: true, names: ['david a nako', 'akihiro hironishi', 'david akihiro nako'] }
 };
 
@@ -1040,7 +1043,7 @@ function calculate() {
   var empMap = csvData.empMap;
 
   // Build employee list in fixed order
-  var ORDER = ['kacee','qiongmei','shaine','shouling','xingyu','yoshimi','yu','zhu','kai'];
+  var ORDER = ['kacee','qiongmei','shaine','shouling','xingyu','yoshimi','yu','zhu','kai','damour','jesson','john'];
   var employees = [];
 
   ORDER.forEach(function(key) {
@@ -1070,17 +1073,23 @@ function calculate() {
   var totalTipHours = employees.reduce(function(s, e) { return s + e.tipHours; }, 0);
   var tipRate = totalTipHours > 0 ? tips / totalTipHours : 0;
 
-  // Assign tips
+  // Assign tips. The rounding remainder goes to the LAST employee who actually
+  // worked tip hours — not merely the last in the list — so a zero-hour name on
+  // the roster never collects leftover cents and the visible rows always sum to
+  // the exact tip total.
+  var lastPaidIdx = -1;
+  employees.forEach(function(e, i) { if (e.tipHours > 0) lastPaidIdx = i; });
+
   var distributed = 0;
   employees.forEach(function(e, i) {
-    if (i < employees.length - 1) {
+    if (i !== lastPaidIdx) {
       e.tips = Math.round(e.tipHours * tipRate * 100) / 100;
       distributed += e.tips;
-    } else {
-      // Last employee gets remainder to avoid rounding error
-      e.tips = Math.round((tips - distributed) * 100) / 100;
     }
   });
+  if (lastPaidIdx >= 0) {
+    employees[lastPaidIdx].tips = Math.round((tips - distributed) * 100) / 100;
+  }
 
   calcResult = {
     employees: employees,
