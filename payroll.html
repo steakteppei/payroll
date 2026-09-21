@@ -707,7 +707,7 @@ body {
 // ════════════════════════════════════════
 // ★ 更新のたびにバージョンを上げる
 // ════════════════════════════════════════
-var PAYROLL_VERSION  = '3.6';
+var PAYROLL_VERSION  = '3.7';
 var PAYROLL_DATETIME = '2026-09-03 17:43:34'; // GitHub Actionsが自動でHawaii時刻に置換
 // ── STATE ──
 var csvData = null;
@@ -728,6 +728,8 @@ var EMP_CONFIG = {
   'damour':   { display: 'Damour Danny',          fixedHours: null, skipOT: false, names: ['damour danny'] },
   'jesson':   { display: 'Jesson Lopez',          fixedHours: null, skipOT: false, names: ['jesson lopez'] },
   'john':     { display: "John O'Connor",         fixedHours: null, skipOT: false, names: ["john o'connor"] },
+  'jose':     { display: 'Jose Aribon',            fixedHours: null, skipOT: false, names: ['jose aribon'] },
+  'william':  { display: 'William D Panos',        fixedHours: null, skipOT: false, names: ['william d panos'] },
   'david':    { display: 'David Akihiro Nako',   skip: true, names: ['david a nako', 'akihiro hironishi', 'david akihiro nako'] }
 };
 
@@ -1043,7 +1045,7 @@ function calculate() {
   var empMap = csvData.empMap;
 
   // Build employee list in fixed order
-  var ORDER = ['kacee','qiongmei','shaine','shouling','xingyu','yoshimi','yu','zhu','kai','damour','jesson','john'];
+  var ORDER = ['kacee','qiongmei','shaine','shouling','xingyu','yoshimi','yu','zhu','kai','damour','jesson','john','jose','william'];
   var employees = [];
 
   ORDER.forEach(function(key) {
